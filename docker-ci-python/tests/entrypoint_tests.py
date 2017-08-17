@@ -3,7 +3,8 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _full_path, _exists_at, _style_check, _coverage_enabled
+    _run_for_project, _full_path, _exists_at, _style_check, _coverage_enabled, \
+    _run_with_safe_error
 
 from .base_test import BaseTest
 
@@ -43,6 +44,17 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         exists.return_value = True
         self.assertFalse(_coverage_enabled())
 
+    def test_run_with_safe_error(self):
+        run = self.patch("run_command")
+        run.side_effect = CommandException(42, ["cmd"], "SAFE")
+        _run_with_safe_error(["cmd"], "SAFE")
+
+    def test_run_and_rethrow_with_unknown_error(self):
+        run = self.patch("run_command")
+        run.side_effect = CommandException(42, ["cmd"], "BOOM!")
+        with self.assertRaises(CommandException):
+            _run_with_safe_error(["cmd"], "SAFE")
+
 
 class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
@@ -62,10 +74,6 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         _run_for_project("/normal-path", ["cmd"])
         self.assertEqual([mock.call(["cmd"])], self.run.call_args_list)
 
-    def test_rethrow_with_unexpected_useradd_error(self):
-        self.run.side_effect = [None, CommandException(42, ["cmd"]), None]
-        self.assertRaises(CommandException, _run_for_project, "/normal-path", ["cmd"])
-
     def test_rethrow_without_sudo_part(self):
         self.run.side_effect = [None, None, CommandException(42, ["cmd"])]
         with self.assertRaises(CommandException) as error:
@@ -75,17 +83,8 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_ok(self):
         _run_for_project("/normal-path", ["cmd"])
         self.assertEqual([
-            mock.call(["groupadd", "-f", "-g", "42", "tester"], silent=True),
-            mock.call(["useradd", "-u", "42", "-g", "42", "tester"], silent=True),
-            mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"])
-        ], self.run.call_args_list)
-
-    def test_ok_user_already_exists(self):
-        self.run.side_effect = [None, CommandException(9, ["cmd"]), None]
-        _run_for_project("/normal-path", ["cmd"])
-        self.assertEqual([
-            mock.call(["groupadd", "-f", "-g", "42", "tester"], silent=True),
-            mock.call(["useradd", "-u", "42", "-g", "42", "tester"], silent=True),
+            mock.call(["addgroup", "-g", "42", "tester"], silent=True),
+            mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"], silent=True),
             mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"])
         ], self.run.call_args_list)
 
