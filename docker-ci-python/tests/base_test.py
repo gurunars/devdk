@@ -1,15 +1,16 @@
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractmethod
 
 import unittest
 
-import mock
+from unittest import mock
 
 
 class BaseTest(unittest.TestCase):
 
     __metaclass__ = ABCMeta
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def MODULE_NAME(self):
         pass
 

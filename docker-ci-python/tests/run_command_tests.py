@@ -1,6 +1,6 @@
 import unittest
 
-import mock
+from unittest import mock
 
 from docker_ci_python.run_command import run_command, _run_yieldable_command, \
     _run_with_accumulation, CommandException, _get_printability_checker

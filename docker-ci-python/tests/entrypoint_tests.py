@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from docker_ci_python.run_command import CommandException
 
@@ -131,7 +131,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def test_connect(self):
         self.ep("connect")
-        self.call.assert_called_once_with(["/bin/bash"])
+        self.call.assert_called_once_with(["/bin/sh"])
 
     def test_style_checks(self):
         self.get_packages.return_value = ["one", "two"]
