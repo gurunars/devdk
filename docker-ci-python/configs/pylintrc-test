@@ -1,0 +1,15 @@
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=119
+
+[REPORTS]
+
+msg-template="[{msg_id}({symbol})] @ {path}:{line} {msg}"
+
+# missing-docstring: Docstrings in tests are evil
+# protected-access: We may want to test protected staff
+# no-member: Pylint does not work with unittest module well and we come up with no-member errors when unit testing
+# invalid-name: Pylint does not recognize unittest module names as proper ones
+
+disable=locally-disabled, missing-docstring, protected-access, no-member, invalid-name

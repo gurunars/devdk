@@ -1,0 +1,7 @@
+README.md
+tests
+.coverage
+.dockerignore
+*.pyc
+Makefile
+
