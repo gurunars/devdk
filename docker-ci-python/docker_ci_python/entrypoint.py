@@ -65,7 +65,6 @@ def _style_check(location, pkg_name, pylintrc_file):
          "--rcfile=/etc/docker-python/{}".format(pylintrc_file), pkg_name])
 
 
-
 class EntryPoint(object):
     """
     Docker entry point to run various commands for a Python project in a sandbox.
@@ -133,4 +132,16 @@ class EntryPoint(object):
 
     def build(self):
         """Produce a bundled build artifact (aka software package)"""
+        raise NotImplementedError
+
+    def docs(self):
+        """Build code documentation using sphinx"""
+        raise NotImplementedError
+
+    def publish(self):
+        """Send the built code to a binary package storage (e.g. PyPi)"""
+        raise NotImplementedError
+
+    def publish_docs(self):
+        """Send the documentation to a place from where it can be read as HTML static site"""
         raise NotImplementedError
