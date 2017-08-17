@@ -35,12 +35,15 @@ def _run_for_project(location, command):
     if uid == 0:  # mounted on behalf of root user (Mac)
         return run_command(command)
     else:  # mounted on behalf of host user (Linux)
-        run_command(["groupadd", "-f", "-g", str(gid), "tester"], silent=True)
         try:
-            run_command(["useradd", "-u", str(uid), "-g", str(gid), "tester"], silent=True)
+            run_command(["addgroup", "-g", str(gid), "tester"], silent=True)
         except CommandException as error:
-            # status code 9 means user already exists
-            if error.returncode != 9:
+            if "addgroup: group 'tester' in use" not in error.stdout:
+                raise
+        try:
+            run_command(["adduser", "-D", "-u", str(uid), "-G", "tester", "tester"], silent=True)
+        except CommandException as error:
+            if "adduser: user 'tester' in use" not in error.stdout:
                 raise
         try:
             run_command(["sudo", "-E", "-S", "-u", "tester"] + command)
