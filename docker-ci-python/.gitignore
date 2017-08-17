@@ -1,0 +1,5 @@
+.coverage
+.coveragerc
+coverage.xml
+coverage/
+nosetests.xml
