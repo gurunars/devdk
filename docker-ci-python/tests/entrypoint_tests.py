@@ -3,8 +3,7 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _full_path, _exists_at, _style_check, _coverage_enabled, \
-    _run_with_safe_error
+    _run_for_project, _full_path, _exists_at, _style_check, _run_with_safe_error
 
 from .base_test import BaseTest
 
@@ -36,13 +35,6 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', ['pyflakes', 'one']),
             mock.call('/project', ['custom-pylint', '--persistent=n', '--rcfile=/etc/docker-python/pylintrc', 'one']),
         ], run.call_args_list)
-
-    def test_coverage_enabled(self):
-        exists = self.patch("os.path.exists")
-        exists.return_value = False
-        self.assertTrue(_coverage_enabled())
-        exists.return_value = True
-        self.assertFalse(_coverage_enabled())
 
     def test_run_with_safe_error(self):
         run = self.patch("run_command")
@@ -101,7 +93,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.exists_at = self.patch("_exists_at")
         self.print_f = self.patch("print")
         self.style_check = self.patch("_style_check")
-        self.coverage_enabled = self.patch("_coverage_enabled")
         self.shutil = self.patch("shutil")
         self.ep = EntryPoint("/project")
 
@@ -168,14 +159,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         ]
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
         self.shutil.copy.assert_called_once_with("/etc/docker-python/coveragerc", "/project/.coveragerc")
-
-    def test_tests_no_coverage(self):
-        self.coverage_enabled.return_value = False
-        self.ep("tests")
-        cmd = [
-            'nosetests', '-v', '--with-xunit', '-e', 'integration_tests',
-        ]
-        self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
 
     def test_complete_validation(self):
         self.ep.style_checks = style_checks = mock.Mock()

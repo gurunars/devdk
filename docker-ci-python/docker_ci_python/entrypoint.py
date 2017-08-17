@@ -65,9 +65,6 @@ def _style_check(location, pkg_name, pylintrc_file):
          "--rcfile=/etc/docker-python/{}".format(pylintrc_file), pkg_name])
 
 
-def _coverage_enabled():
-    return not os.path.exists("NOCOVERAGE")
-
 
 class EntryPoint(object):
     """
@@ -119,15 +116,14 @@ class EntryPoint(object):
     def tests(self):
         """Run unit tests with code coverage"""
         cmd = ["nosetests", "-v", "--with-xunit", "-e", "integration_tests"]
-        if _coverage_enabled():
-            # There is no way to make coverage module show missed lines otherwise
-            shutil.copy("/etc/docker-python/coveragerc", "/project/.coveragerc")
-            cmd += [
-                "--cover-erase",  # To get proper stats
-                "--with-coverage", "--cover-min-percentage=100", "--cover-inclusive",
-                "--cover-html", "--cover-html-dir=/project/coverage",
-                "--cover-xml", "--cover-xml-file=/project/coverage.xml"
-            ] + list(map("--cover-package={}".format, _get_testable_packages(self._location)))
+        # There is no way to make coverage module show missed lines otherwise
+        shutil.copy("/etc/docker-python/coveragerc", "/project/.coveragerc")
+        cmd += [
+            "--cover-erase",  # To get proper stats
+            "--with-coverage", "--cover-min-percentage=100", "--cover-inclusive",
+            "--cover-html", "--cover-html-dir=/project/coverage",
+            "--cover-xml", "--cover-xml-file=/project/coverage.xml"
+        ] + list(map("--cover-package={}".format, _get_testable_packages(self._location)))
         _run_for_project(self._location, cmd)
 
     def complete_validation(self):
