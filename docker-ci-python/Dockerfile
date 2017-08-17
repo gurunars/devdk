@@ -1,6 +1,8 @@
 FROM python:3.6-alpine
 
-RUN pip install -U pip setuptools
+RUN apk update && \
+    apk add coreutils && \
+    pip install -U pip setuptools
 
 ADD /requirements.txt /build/
 

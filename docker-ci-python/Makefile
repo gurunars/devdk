@@ -1,10 +1,9 @@
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 RUN=docker run --rm -v $(PWD):/project
 IMG=docker-ci-python
-DOCKER=Dockerfile
 
 image:
-	@docker build -f $(DOCKER) . -t $(IMG)
+	@docker build . -t $(IMG)
 
 help tests build connect repl: image
 ifdef INTERACTIVE
