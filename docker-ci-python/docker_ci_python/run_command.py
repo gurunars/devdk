@@ -32,24 +32,17 @@ def _run_yieldable_command(command):
         raise CommandException(status, command)
 
 
-def _run_with_accumulation(accumulator, command, printable, capture):
+def _run_with_accumulation(accumulator, command, silent, printable, capture):
     for line in _run_yieldable_command(command):
         if printable(line):
             if capture:
                 accumulator.append(line)
-            print(line, end="")
-
-
-def _get_printability_checker(silent=False, printable=None):
-    if silent:
-        return lambda line: False
-    elif callable(printable):
-        return printable
-    return lambda line: True
+            if not silent:
+                print(line, end="")
 
 
 def run_command(command, silent=False, printable=None, capture=False):
-    """
+    """stdout
     Execute a command, print output to stdout line by line and return the whole
     output as a string.
 
@@ -76,7 +69,8 @@ def run_command(command, silent=False, printable=None, capture=False):
         _run_with_accumulation(
             accumulator=lines,
             command=UNBUFFER_PREFIX + command,
-            printable=_get_printability_checker(silent, printable),
+            silent=silent,
+            printable=printable or (lambda line: True),
             capture=capture
         )
     except CommandException as error:

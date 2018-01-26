@@ -31,7 +31,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         run = self.patch("_run_for_project")
         _style_check("/project", "one", "pylintrc")
         self.assertEqual([
-            mock.call('/project', ['pep8', '--max-line-length=119', 'one']),
+            mock.call('/project', ['pycodestyle', '--max-line-length=119', 'one']),
             mock.call('/project', ['pyflakes', 'one']),
             mock.call('/project', ['custom-pylint', '--persistent=n', '--rcfile=/etc/docker-python/pylintrc', 'one']),
         ], run.call_args_list)
@@ -75,8 +75,8 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_ok(self):
         _run_for_project("/normal-path", ["cmd"])
         self.assertEqual([
-            mock.call(["addgroup", "-g", "42", "tester"], silent=True),
-            mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"], silent=True),
+            mock.call(["addgroup", "-g", "42", "tester"], silent=True, capture=True),
+            mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"], silent=True, capture=True),
             mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"])
         ], self.run.call_args_list)
 
@@ -98,21 +98,24 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def test_help(self):
         self.ep("help")
+        print(self.print_f.call_args_list)
         self.assertEqual([
             mock.call('build'),
-            mock.call('\tProduce a bundled build artifact (aka software package)'),
-            mock.call('complete-validation'),
-            mock.call('\tstyle-checks + tests'),
+            mock.call('\tProduces a bundled build artifact (aka software package) and Sphinx based docs'),
             mock.call('connect'),
-            mock.call('\tSsh into the container'),
+            mock.call('\tConnects into the container\'s bash'),
             mock.call('help'),
-            mock.call('\tShow help message'),
+            mock.call('\tShows help message'),
+            mock.call('publish'),
+            mock.call('\tSends the built code to a binary package storage (e.g. PyPi)'),
             mock.call('repl'),
-            mock.call('\tRun ipython within a container'),
+            mock.call('\tRuns ipython within a container'),
             mock.call('style-checks'),
-            mock.call('\tRun pep8, pylint and pyflakes'),
+            mock.call('\tRuns pycodestyle, pylint and pyflakes'),
             mock.call('tests'),
-            mock.call('\tRun unit tests with code coverage')
+            mock.call('\tRuns unit tests with code coverage'),
+            mock.call('validate'),
+            mock.call('\tstyle-checks + tests'),
         ], self.print_f.call_args_list)
 
     def test_repl(self):
@@ -143,8 +146,9 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', 'tests', 'pylintrc-test')
         ], self.style_check.call_args_list)
 
-    def test_build(self):
+    def test_not_implemented(self):
         self.assertRaises(NotImplementedError, self.ep, "build")
+        self.assertRaises(NotImplementedError, self.ep, "publish")
 
     def test_tests(self):
         self.get_packages.return_value = ["one", "two"]
@@ -163,6 +167,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_complete_validation(self):
         self.ep.style_checks = style_checks = mock.Mock()
         self.ep.tests = tests = mock.Mock()
-        self.ep.complete_validation()
+        self.ep.validate()
         self.assertEqual(1, style_checks.call_count)
         self.assertEqual(1, tests.call_count)

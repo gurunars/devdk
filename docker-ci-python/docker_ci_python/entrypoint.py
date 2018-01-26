@@ -26,10 +26,11 @@ def _exists_at(parent, child):
 
 def _run_with_safe_error(cmd, safe_error):
     try:
-        run_command(cmd, silent=True)
+        run_command(cmd, silent=True, capture=True)
     except CommandException as error:
         if safe_error not in str(error.stdout):
-            raise
+            print(error.stdout)
+            raise error
 
 
 def _run_for_project(location, command):
@@ -52,14 +53,14 @@ def _run_for_project(location, command):
             "adduser: user 'tester' in use"
         )
         try:
-            run_command(["sudo", "-E", "-S", "-u", "tester"] + command)
+            return run_command(["sudo", "-E", "-S", "-u", "tester"] + command)
         except CommandException as error:
             raise CommandException(error.returncode, command, error.output)
 
 
 def _style_check(location, pkg_name, pylintrc_file):
     run = partial(_run_for_project, location)
-    run(["pep8", "--max-line-length=119", pkg_name])
+    run(["pycodestyle", "--max-line-length=119", pkg_name])
     run(["pyflakes", pkg_name])
     run(["custom-pylint", "--persistent=n",
          "--rcfile=/etc/docker-python/{}".format(pylintrc_file), pkg_name])
@@ -91,21 +92,21 @@ class EntryPoint(object):
     # We do want it to be called help
     # pylint: disable=redefined-builtin
     def help(self):
-        """Show help message"""
+        """Shows help message"""
         for name, help in self._get_commands():
             print(name)
             print("\t{}".format(help))
 
     def repl(self):
-        """Run ipython within a container"""
+        """Runs ipython within a container"""
         subprocess.call(["ipython"])
 
     def connect(self):
-        """Ssh into the container"""
+        """Connects into the container's bash"""
         subprocess.call(["/bin/sh"])
 
     def style_checks(self):
-        """Run pep8, pylint and pyflakes"""
+        """Runs pycodestyle, pylint and pyflakes"""
         for pkg_name in _get_testable_packages(self._location):
             _style_check(self._location, pkg_name, "pylintrc")
         _style_check(self._location, "tests", "pylintrc-test")
@@ -113,35 +114,31 @@ class EntryPoint(object):
             _style_check(self._location, "integration_tests", "pylintrc-test")
 
     def tests(self):
-        """Run unit tests with code coverage"""
-        cmd = ["nosetests", "-v", "--with-xunit", "-e", "integration_tests"]
+        """Runs unit tests with code coverage"""
         # There is no way to make coverage module show missed lines otherwise
         shutil.copy("/etc/docker-python/coveragerc", "/project/.coveragerc")
-        cmd += [
-            "--cover-erase",  # To get proper stats
-            "--with-coverage", "--cover-min-percentage=100", "--cover-inclusive",
-            "--cover-html", "--cover-html-dir=/project/coverage",
-            "--cover-xml", "--cover-xml-file=/project/coverage.xml"
-        ] + list(map("--cover-package={}".format, _get_testable_packages(self._location)))
-        _run_for_project(self._location, cmd)
+        _run_for_project(
+            self._location, [
+                "nosetests", "-v", "--with-xunit", "-e", "integration_tests",
+                "--cover-erase",  # To get proper stats
+                "--with-coverage", "--cover-min-percentage=100", "--cover-inclusive",
+                "--cover-html", "--cover-html-dir=/project/coverage",
+                "--cover-xml", "--cover-xml-file=/project/coverage.xml"
+            ] + list(
+                map("--cover-package={}".format,
+                    _get_testable_packages(self._location))
+            )
+        )
 
-    def complete_validation(self):
+    def validate(self):
         """style-checks + tests"""
         self.style_checks()
         self.tests()
 
     def build(self):
-        """Produce a bundled build artifact (aka software package)"""
-        raise NotImplementedError
-
-    def docs(self):
-        """Build code documentation using sphinx"""
+        """Produces a bundled build artifact (aka software package) and Sphinx based docs"""
         raise NotImplementedError
 
     def publish(self):
-        """Send the built code to a binary package storage (e.g. PyPi)"""
-        raise NotImplementedError
-
-    def publish_docs(self):
-        """Send the documentation to a place from where it can be read as HTML static site"""
+        """Sends the built code to a binary package storage (e.g. PyPi)"""
         raise NotImplementedError

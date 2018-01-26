@@ -1,9 +1,7 @@
-import unittest
-
 from unittest import mock
 
 from docker_ci_python.run_command import run_command, _run_yieldable_command, \
-    _run_with_accumulation, CommandException, _get_printability_checker
+    _run_with_accumulation, CommandException
 
 from .base_test import BaseTest
 
@@ -48,21 +46,21 @@ class RunWithAccumulationCommandTest(BaseTest.with_module("docker_ci_python.run_
 
     def test_all_output(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], lambda line: True, capture=True
+            self.accumulator, ["cmd"], printable=lambda line: True, capture=True, silent=False
         )
         self.assertEqual(["one", "two", "three"], self.accumulator)
         self._assert_prints(["one", "two", "three"])
 
     def test_partial_output(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], lambda line: line != "two", capture=True
+            self.accumulator, ["cmd"], printable=lambda line: line != "two", capture=True, silent=False
         )
         self.assertEqual(["one", "three"], self.accumulator)
         self._assert_prints(["one", "three"])
 
     def test_no_capture(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], lambda line: True, capture=False
+            self.accumulator, ["cmd"], printable=lambda line: True, capture=False, silent=False
         )
         self.assertEqual([], self.accumulator)
         self._assert_prints(["one", "two", "three"])
@@ -73,7 +71,7 @@ class RunCommandTest(BaseTest.with_module("docker_ci_python.run_command")):
     def test_ok(self):
 
         # pylint: disable=unused-argument
-        def fake_run(accumulator, command, printable, capture):
+        def fake_run(accumulator, command, silent, printable, capture):
             accumulator.extend(["Line #1", "Line #2"])
 
         self.patch("_run_with_accumulation", fake_run)
@@ -83,21 +81,3 @@ class RunCommandTest(BaseTest.with_module("docker_ci_python.run_command")):
         run = self.patch("_run_with_accumulation")
         run.side_effect = CommandException(42, ["cmd"])
         self.assertRaises(CommandException, run_command, ["cmd"])
-
-
-class PrintabilityTest(unittest.TestCase):
-
-    def test_printable(self):
-        printable = _get_printability_checker(printable=lambda line: line != "ignore")
-        self.assertTrue(printable("normal"))
-        self.assertFalse(printable("ignore"))
-
-    def test_silent_printable_none(self):
-        printable = _get_printability_checker(silent=True)
-        self.assertFalse(printable("normal"))
-        self.assertFalse(printable("ignore"))
-
-    def test_silent_and_printable(self):
-        printable = _get_printability_checker(silent=True, printable=lambda line: True)
-        self.assertFalse(printable("normal"))
-        self.assertFalse(printable("ignore"))
