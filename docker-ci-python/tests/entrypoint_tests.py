@@ -3,12 +3,21 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _full_path, _exists_at, _style_check, _run_with_safe_error
+    _run_for_project, _full_path, _exists_at, _style_check, _run_with_safe_error, \
+    _rm
 
 from .base_test import BaseTest
 
 
 class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+
+    def test_rm(self):
+        self.patch("os.path.exists", lambda path: path == "/project/exists")
+        remove = self.patch("os.remove")
+        rmtree = self.patch("shutil.rmtree")
+        _rm("exists")
+        remove.assert_called_once_with("/project/exists")
+        rmtree.assert_called_once_with("/project/exists", ignore_errors=True)
 
     def test_get_testable_packages(self):
         find_pkgs = self.patch("setuptools").find_packages
@@ -94,6 +103,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.print_f = self.patch("print")
         self.style_check = self.patch("_style_check")
         self.shutil = self.patch("shutil")
+        self.rm = self.patch("_rm")
         self.ep = EntryPoint("/project")
 
     def test_help(self):
@@ -102,6 +112,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertEqual([
             mock.call('build'),
             mock.call('\tProduces a bundled build artifact (aka software package) and Sphinx based docs'),
+            mock.call('clean'),
+            mock.call('\tRemoves all the artifacts produced by the toolchain'),
             mock.call('connect'),
             mock.call('\tConnects into the container\'s bash'),
             mock.call('help'),
@@ -164,9 +176,16 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
         self.shutil.copy.assert_called_once_with("/etc/docker-python/coveragerc", "/project/.coveragerc")
 
-    def test_complete_validation(self):
+    def test_validate(self):
         self.ep.style_checks = style_checks = mock.Mock()
         self.ep.tests = tests = mock.Mock()
         self.ep.validate()
         self.assertEqual(1, style_checks.call_count)
         self.assertEqual(1, tests.call_count)
+
+    def test_clean(self):
+        self.ep.clean()
+        self.assertEqual(
+            list(map(mock.call, self.ep.ARTIFACTS)),
+            self.rm.call_args_list
+        )

@@ -33,6 +33,13 @@ def _run_with_safe_error(cmd, safe_error):
             raise error
 
 
+def _rm(path):
+    path = os.path.join("/project", path)
+    shutil.rmtree(path, ignore_errors=True)
+    if os.path.exists(path):
+        os.remove(path)
+
+
 def _run_for_project(location, command):
     if not os.path.exists(location):
         sys.exit("'{}' directory does not exist".format(location))
@@ -73,6 +80,11 @@ class EntryPoint(object):
 
     # All methods here should remain members of the EntryPoint class
     # pylint: disable=no-self-use
+
+    ARTIFACTS = [
+        "coverage", ".coverage", ".coveragerc", "coverage.xml",
+        "nosetests.xml"
+    ]
 
     def __init__(self, location):
         self._location = _full_path(location)
@@ -129,6 +141,11 @@ class EntryPoint(object):
                     _get_testable_packages(self._location))
             )
         )
+
+    def clean(self):
+        """Removes all the artifacts produced by the toolchain"""
+        for artifact in self.ARTIFACTS:
+            _rm(artifact)
 
     def validate(self):
         """style-checks + tests"""
