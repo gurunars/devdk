@@ -17,9 +17,7 @@ def _run_yieldable_command(command):
     # like pep8, pylint and mvn write errors to STDOUT and not STDERR.
     # This leads us to really polluted exceptions in case of failures,
     # but unfortunately there is nothing that can be done about it.
-    process = subprocess.Popen(command,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     for line in iter(process.stdout.readline, b""):
         yield line if isinstance(line, str) else line.decode("utf-8")

@@ -31,7 +31,12 @@ setup(
     provides=["docker_ci_python"],
     install_requires=_get_requirements(),
     version=_get_version(),
-    data_files=[('/etc/docker-python', ['configs/pylintrc', 'configs/pylintrc-test', 'configs/coveragerc'])],
+    data_files=[('/etc/docker-python', [
+        'configs/pylintrc',
+        'configs/pylintrc-test',
+        'configs/coveragerc',
+        'configs/yapf'
+    ])],
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     entry_points={

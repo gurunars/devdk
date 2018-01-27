@@ -34,7 +34,7 @@ class RunWithAccumulationCommandTest(BaseTest.with_module("docker_ci_python.run_
     def setUp(self):
         self.run_yieldable_command = self.patch("_run_yieldable_command", mock.Mock(
             return_value=["one", "two", "three"]
-        ))
+        ))  # yapf: disable
         self.print_f = self.patch("print")
         self.accumulator = []
 
@@ -42,26 +42,26 @@ class RunWithAccumulationCommandTest(BaseTest.with_module("docker_ci_python.run_
         self.assertEqual(
             [mock.call(item, end="") for item in expected_lines],
             self.print_f.call_args_list
-        )
+        )  # yapf: disable
 
     def test_all_output(self):
         _run_with_accumulation(
             self.accumulator, ["cmd"], printable=lambda line: True, capture=True, silent=False
-        )
+        )  # yapf: disable
         self.assertEqual(["one", "two", "three"], self.accumulator)
         self._assert_prints(["one", "two", "three"])
 
     def test_partial_output(self):
         _run_with_accumulation(
             self.accumulator, ["cmd"], printable=lambda line: line != "two", capture=True, silent=False
-        )
+        )  # yapf: disable
         self.assertEqual(["one", "three"], self.accumulator)
         self._assert_prints(["one", "three"])
 
     def test_no_capture(self):
         _run_with_accumulation(
             self.accumulator, ["cmd"], printable=lambda line: True, capture=False, silent=False
-        )
+        )  # yapf: disable
         self.assertEqual([], self.accumulator)
         self._assert_prints(["one", "two", "three"])
 

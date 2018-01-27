@@ -4,12 +4,27 @@ from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
     _run_for_project, _full_path, _exists_at, _style_check, _run_with_safe_error, \
-    _rm
+    _rm, _reformat_pkg
 
 from .base_test import BaseTest
 
 
 class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+
+    def test_reformat_pkg(self):
+        self.patch("_exists_at", lambda location, pkg: True)
+        run = self.patch("_run_for_project")
+        _reformat_pkg("location", "pkg_name")
+        run.assert_called_once_with(
+            "location",
+            ["yapf", "-i", "-r", "-p", "--style", "/etc/docker-python/yapf", "pkg_name"]
+        )  # yapf: disable
+
+    def test_reformat_pkg_does_not_exist(self):
+        self.patch("_exists_at", lambda location, pkg: False)
+        run = self.patch("_run_for_project")
+        _reformat_pkg("location", "pkg_name")
+        self.assertFalse(run.called)
 
     def test_rm(self):
         self.patch("os.path.exists", lambda path: path == "/project/exists")
@@ -37,6 +52,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertFalse(_exists_at("/parent", "not-exists"))
 
     def test_style_check(self):
+        self.patch("_exists_at", lambda location, pkg: True)
         run = self.patch("_run_for_project")
         _style_check("/project", "one", "pylintrc")
         self.assertEqual([
@@ -44,6 +60,12 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', ['pyflakes', 'one']),
             mock.call('/project', ['custom-pylint', '--persistent=n', '--rcfile=/etc/docker-python/pylintrc', 'one']),
         ], run.call_args_list)
+
+    def test_style_check_doest_not_exist(self):
+        self.patch("_exists_at", lambda location, pkg: False)
+        run = self.patch("_run_for_project")
+        _style_check("/project", "one", "pylintrc")
+        self.assertFalse(run.called)
 
     def test_run_with_safe_error(self):
         run = self.patch("run_command")
@@ -104,6 +126,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.style_check = self.patch("_style_check")
         self.shutil = self.patch("shutil")
         self.rm = self.patch("_rm")
+        self.reformat = self.patch("_reformat_pkg")
         self.ep = EntryPoint("/project")
 
     def test_help(self):
@@ -120,6 +143,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('\tShows help message'),
             mock.call('publish'),
             mock.call('\tSends the built code to a binary package storage (e.g. PyPi)'),
+            mock.call('reformat'),
+            mock.call('\tReformats the code to have the best possible style'),
             mock.call('repl'),
             mock.call('\tRuns ipython within a container'),
             mock.call('style-checks'),
@@ -146,17 +171,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', 'two', 'pylintrc'),
             mock.call('/project', 'tests', 'pylintrc-test'),
             mock.call('/project', 'integration_tests', 'pylintrc-test'),
-        ], self.style_check.call_args_list)
-
-    def test_style_checks_no_integration_tests(self):
-        self.exists_at.return_value = False
-        self.get_packages.return_value = ["one", "two"]
-        self.ep("style-checks")
-        self.assertEqual([
-            mock.call('/project', 'one', 'pylintrc'),
-            mock.call('/project', 'two', 'pylintrc'),
-            mock.call('/project', 'tests', 'pylintrc-test')
-        ], self.style_check.call_args_list)
+        ], self.style_check.call_args_list)  # yapf: disable
 
     def test_not_implemented(self):
         self.assertRaises(NotImplementedError, self.ep, "build")
@@ -172,7 +187,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             '--cover-html', '--cover-html-dir=/project/coverage',
             '--cover-xml', '--cover-xml-file=/project/coverage.xml',
             '--cover-package=one', '--cover-package=two'
-        ]
+        ]  # yapf: disable
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
         self.shutil.copy.assert_called_once_with("/etc/docker-python/coveragerc", "/project/.coveragerc")
 
@@ -188,4 +203,17 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertEqual(
             list(map(mock.call, self.ep.ARTIFACTS)),
             self.rm.call_args_list
-        )
+        )  # yapf: disable
+
+    def test_reformat(self):
+        self.get_packages.return_value = ["one", "two"]
+        self.ep.reformat()
+        self.assertEqual(
+            list(map(lambda pkg: mock.call("/project", pkg), [
+                "one",
+                "two",
+                "tests",
+                "integration_tests"
+            ])),
+            self.reformat.call_args_list
+        )  # yapf: disable

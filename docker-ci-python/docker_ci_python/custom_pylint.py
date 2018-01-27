@@ -6,11 +6,9 @@ from pylint.checkers.base import DocStringChecker as OriginalDocStringChecker
 from pylint.checkers import utils
 from pylint.lint import Run as OriginalRun, PyLinter as OriginalPyLinter
 
-
 # This is not a public API - docstrings are not necessary
 # Too many ancestors is the issue in the original PyLint
 # pylint: disable=missing-docstring, too-many-ancestors
-
 
 # NOTE: there is no point to cover this class since it is extends
 # the original pylint without adding any extra logic

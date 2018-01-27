@@ -16,8 +16,10 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def with_module(cls, module_name):
+
         class ModuledBaseTest(cls):
             MODULE_NAME = module_name
+
         return ModuledBaseTest
 
     def patch(self, what, with_what=None):
