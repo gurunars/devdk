@@ -13,7 +13,7 @@ else
 endif
 
 clean:
-    -@$(RUN) $(IMG) clean > /dev/null 2>&1 | true
+	-@$(RUN) $(IMG) clean > /dev/null 2>&1 | true
 	-@docker rmi -f $(IMG) > /dev/null 2>&1 | true
 
 
