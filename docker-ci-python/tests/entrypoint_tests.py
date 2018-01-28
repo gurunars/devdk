@@ -173,7 +173,11 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         print(self.print_f.call_args_list)
         self.assertEqual([
             mock.call('build'),
-            mock.call('\tProduces a library package and api docs'),
+            mock.
+            call('\tProduces a library package in the form of wheel package'),
+            mock.call('build-docs'),
+            mock.
+            call('\tProduces api docs in the form of .rst and .html files'),
             mock.call('clean'),
             mock.call('\tRemoves all the artifacts produced by the toolchain'),
             mock.call('connect'),
@@ -252,7 +256,10 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         )
 
     def test_build(self):
-        self.get_packages.return_value = ["one", "two"]
         self.ep.build()
-        self.gen_docs.assert_called_once_with("/project", ["one", "two"])
         self.gen_bin.assert_called_once_with("/project")
+
+    def test_build_docs(self):
+        self.get_packages.return_value = ["one", "two"]
+        self.ep.build_docs()
+        self.gen_docs.assert_called_once_with("/project", ["one", "two"])

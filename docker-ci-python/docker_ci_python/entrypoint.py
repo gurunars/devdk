@@ -232,8 +232,11 @@ class EntryPoint(object):
             _reformat_pkg(self._location, pkg_name)
 
     def build(self):
-        """Produces a library package and api docs"""
+        """Produces a library package in the form of wheel package"""
+        _generate_binary(self._location)
+
+    def build_docs(self):
+        """Produces api docs in the form of .rst and .html files"""
         _generate_api_docs(
             self._location, _get_testable_packages(self._location)
         )
-        _generate_binary(self._location)
