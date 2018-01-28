@@ -10,7 +10,7 @@ else
 	@$(RUN) $(IMG) $@
 endif
 
-all: clean static-checks tests build build-docs
+all: clean static-checks tests build publish build-docs publish-docs
 
 
 .PHONY: help build static-checks connect tests clean repl reformat all

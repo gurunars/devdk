@@ -125,8 +125,14 @@ def _generate_api_docs(location, pkg_names):
     )
 
 
-def _generate_binary(location):
-    _run_for_project(location, ["python", "setup.py", "bdist_wheel"])
+def _publish_docs(location):
+    
+
+
+GIT_REPO_DOCUMENTATION_BRANCH = "git-repo-documentation-branch"
+GIT_REPO_SSL_KEY = "git-repo-ssl-key"
+PKG_REPO_USERNAME = "pkg-repo-username"
+PKG_REPO_PASSWORD = "pkg-repo-password"
 
 
 class EntryPoint(object):
@@ -193,7 +199,10 @@ class EntryPoint(object):
     def tests(self):
         """Runs unit tests with code coverage"""
         # There is no way to make coverage module show missed lines otherwise
-        shutil.copy("/etc/docker-python/coveragerc", "/project/.coveragerc")
+        shutil.copy(
+            "/etc/docker-python/coveragerc",
+            os.path.join(self._location, ".coveragerc")
+        )
         _run_for_project(
             self._location,
             [
@@ -207,9 +216,9 @@ class EntryPoint(object):
                 "--cover-min-percentage=100",
                 "--cover-inclusive",
                 "--cover-html",
-                "--cover-html-dir=/project/coverage",
+                "--cover-html-dir={}".format(os.path.join(self._location, "coverage")),
                 "--cover-xml",
-                "--cover-xml-file=/project/coverage.xml"
+                "--cover-xml-file={}".format(os.path.join(self._location, "coverage.xml"))
             ] + list(
                 map(
                     "--cover-package={}".format,
@@ -233,10 +242,21 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        _generate_binary(self._location)
+        _run_for_project(
+            self._location,
+            ["python", "setup.py", "sdist", "bdist_wheel"]
+        )
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
         _generate_api_docs(
             self._location, _get_testable_packages(self._location)
         )
+
+    def publish(self):
+        """Sends a library package to PyPi"""
+        _run_for_project(self._location, ["twine", "upload", "dist/*"])
+
+    def publish_docs(self):
+        """Pushes the latest version of html docs to a specified git branch"""
+        _publish_docs(self._location)
