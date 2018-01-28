@@ -3,8 +3,8 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _full_path, _exists_at, _style_check, _run_with_safe_error, \
-    _rm, _reformat_pkg
+    _run_for_project, _full_path, _exists_at, _style_check, \
+    _run_with_safe_error, _rm, _reformat_pkg
 
 from .base_test import BaseTest
 
@@ -16,9 +16,11 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         run = self.patch("_run_for_project")
         _reformat_pkg("location", "pkg_name")
         run.assert_called_once_with(
-            "location",
-            ["yapf", "-i", "-r", "-p", "--style", "/etc/docker-python/yapf", "pkg_name"]
-        )  # yapf: disable
+            "location", [
+                "yapf", "-i", "-r", "-p", "--style", "/etc/docker-python/yapf",
+                "pkg_name"
+            ]
+        )
 
     def test_reformat_pkg_does_not_exist(self):
         self.patch("_exists_at", lambda location, pkg: False)
@@ -38,7 +40,9 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         find_pkgs = self.patch("setuptools").find_packages
         find_pkgs.return_value = ["one", "two", "one.subone"]
         self.assertEqual(["one", "two"], _get_testable_packages())
-        find_pkgs.assert_called_once_with(".", exclude=["tests", "integration_tests"])
+        find_pkgs.assert_called_once_with(
+            ".", exclude=["tests", "integration_tests"]
+        )
 
     def test_full_path(self):
         path = self.patch("os.path")
@@ -56,9 +60,16 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         run = self.patch("_run_for_project")
         _style_check("/project", "one", "pylintrc")
         self.assertEqual([
-            mock.call('/project', ['pycodestyle', '--max-line-length=119', 'one']),
+            mock.call(
+                '/project', ['pycodestyle', '--max-line-length=79', 'one']
+            ),
             mock.call('/project', ['pyflakes', 'one']),
-            mock.call('/project', ['custom-pylint', '--persistent=n', '--rcfile=/etc/docker-python/pylintrc', 'one']),
+            mock.call(
+                '/project', [
+                    'custom-pylint', '--persistent=n',
+                    '--rcfile=/etc/docker-python/pylintrc', 'one'
+                ]
+            ),
         ], run.call_args_list)
 
     def test_style_check_doest_not_exist(self):
@@ -90,7 +101,9 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def test_non_existent_location(self):
         self.exists.return_value = False
-        self.assertRaises(SystemExit, _run_for_project, "/nonexistent", ["cmd"])
+        self.assertRaises(
+            SystemExit, _run_for_project, "/nonexistent", ["cmd"]
+        )
 
     def test_root_user(self):
         self.stat.st_uid = 0
@@ -106,8 +119,12 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_ok(self):
         _run_for_project("/normal-path", ["cmd"])
         self.assertEqual([
-            mock.call(["addgroup", "-g", "42", "tester"], silent=True, capture=True),
-            mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"], silent=True, capture=True),
+            mock.call(["addgroup", "-g", "42", "tester"],
+                      silent=True,
+                      capture=True),
+            mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"],
+                      silent=True,
+                      capture=True),
             mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"])
         ], self.run.call_args_list)
 
@@ -134,7 +151,10 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         print(self.print_f.call_args_list)
         self.assertEqual([
             mock.call('build'),
-            mock.call('\tProduces a bundled build artifact (aka software package) and Sphinx based docs'),
+            mock.call(
+                '\tProduces a bundled build artifact (aka software package) '
+                'and Sphinx based docs'
+            ),
             mock.call('clean'),
             mock.call('\tRemoves all the artifacts produced by the toolchain'),
             mock.call('connect'),
@@ -142,7 +162,10 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('help'),
             mock.call('\tShows help message'),
             mock.call('publish'),
-            mock.call('\tSends the built code to a binary package storage (e.g. PyPi)'),
+            mock.call(
+                '\tSends the built code to a binary package '
+                'storage (e.g. PyPi)'
+            ),
             mock.call('reformat'),
             mock.call('\tReformats the code to have the best possible style'),
             mock.call('repl'),
@@ -171,7 +194,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', 'two', 'pylintrc'),
             mock.call('/project', 'tests', 'pylintrc-test'),
             mock.call('/project', 'integration_tests', 'pylintrc-test'),
-        ], self.style_check.call_args_list)  # yapf: disable
+        ], self.style_check.call_args_list)
 
     def test_not_implemented(self):
         self.assertRaises(NotImplementedError, self.ep, "build")
@@ -182,14 +205,16 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.ep("tests")
         cmd = [
             'nosetests', '-v', '--with-xunit', '-e', 'integration_tests',
-            '--cover-erase',
-            '--with-coverage', '--cover-min-percentage=100', '--cover-inclusive',
-            '--cover-html', '--cover-html-dir=/project/coverage',
-            '--cover-xml', '--cover-xml-file=/project/coverage.xml',
-            '--cover-package=one', '--cover-package=two'
-        ]  # yapf: disable
+            '--cover-erase', '--with-coverage', '--cover-min-percentage=100',
+            '--cover-inclusive', '--cover-html',
+            '--cover-html-dir=/project/coverage', '--cover-xml',
+            '--cover-xml-file=/project/coverage.xml', '--cover-package=one',
+            '--cover-package=two'
+        ]
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
-        self.shutil.copy.assert_called_once_with("/etc/docker-python/coveragerc", "/project/.coveragerc")
+        self.shutil.copy.assert_called_once_with(
+            "/etc/docker-python/coveragerc", "/project/.coveragerc"
+        )
 
     def test_validate(self):
         self.ep.style_checks = style_checks = mock.Mock()
@@ -202,18 +227,18 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.ep.clean()
         self.assertEqual(
             list(map(mock.call, self.ep.ARTIFACTS)),
-            self.rm.call_args_list
-        )  # yapf: disable
+            self.rm.call_args_list,
+        )
 
     def test_reformat(self):
         self.get_packages.return_value = ["one", "two"]
         self.ep.reformat()
         self.assertEqual(
-            list(map(lambda pkg: mock.call("/project", pkg), [
-                "one",
-                "two",
-                "tests",
-                "integration_tests"
-            ])),
-            self.reformat.call_args_list
-        )  # yapf: disable
+            list(
+                map(
+                    lambda pkg: mock.call("/project", pkg),
+                    ["one", "two", "tests", "integration_tests"]
+                )
+            ),
+            self.reformat.call_args_list,
+        )

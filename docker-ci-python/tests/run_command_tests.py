@@ -10,7 +10,10 @@ def _run():
     return _run_yieldable_command(["cmd"])
 
 
-class RunYieldableCommandTest(BaseTest.with_module("docker_ci_python.run_command")):
+BASE = BaseTest.with_module("docker_ci_python.run_command")
+
+
+class RunYieldableCommandTest(BASE):
 
     def setUp(self):
         self.process = self.patch("subprocess.Popen").return_value
@@ -29,39 +32,49 @@ def _to_calls(array):
     return [mock.call(item, end="") for item in array]
 
 
-class RunWithAccumulationCommandTest(BaseTest.with_module("docker_ci_python.run_command")):
+class RunWithAccumulationCommandTest(BASE):
 
     def setUp(self):
-        self.run_yieldable_command = self.patch("_run_yieldable_command", mock.Mock(
-            return_value=["one", "two", "three"]
-        ))  # yapf: disable
+        self.run_yieldable_command = self.patch(
+            "_run_yieldable_command",
+            mock.Mock(return_value=["one", "two", "three"])
+        )
         self.print_f = self.patch("print")
         self.accumulator = []
 
     def _assert_prints(self, expected_lines):
         self.assertEqual(
             [mock.call(item, end="") for item in expected_lines],
-            self.print_f.call_args_list
-        )  # yapf: disable
+            self.print_f.call_args_list,
+        )
 
     def test_all_output(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], printable=lambda line: True, capture=True, silent=False
-        )  # yapf: disable
+            self.accumulator, ["cmd"],
+            printable=lambda line: True,
+            capture=True,
+            silent=False
+        )
         self.assertEqual(["one", "two", "three"], self.accumulator)
         self._assert_prints(["one", "two", "three"])
 
     def test_partial_output(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], printable=lambda line: line != "two", capture=True, silent=False
-        )  # yapf: disable
+            self.accumulator, ["cmd"],
+            printable=lambda line: line != "two",
+            capture=True,
+            silent=False
+        )
         self.assertEqual(["one", "three"], self.accumulator)
         self._assert_prints(["one", "three"])
 
     def test_no_capture(self):
         _run_with_accumulation(
-            self.accumulator, ["cmd"], printable=lambda line: True, capture=False, silent=False
-        )  # yapf: disable
+            self.accumulator, ["cmd"],
+            printable=lambda line: True,
+            capture=False,
+            silent=False
+        )
         self.assertEqual([], self.accumulator)
         self._assert_prints(["one", "two", "three"])
 

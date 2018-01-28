@@ -1,8 +1,9 @@
 [style]
 based_on_style = pep8
 spaces_before_comment = 2
-column_limit = 119
+column_limit = 79
 each_dict_entry_on_separate_line = true
 dedent_closing_brackets = true
 coalesce_brackets = true
 blank_line_before_nested_class_or_def = true
+split_arguments_when_comma_terminated = true

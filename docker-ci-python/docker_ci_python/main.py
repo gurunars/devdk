@@ -12,8 +12,12 @@ from .run_command import CommandException
 def main(argv=None):
     entrypoint = EntryPoint("/project")
 
-    parser = argparse.ArgumentParser("Run CI related tasks for Python packages in a Docker container")
-    parser.add_argument("subcommand", choices=dict(entrypoint._get_commands()).keys())
+    parser = argparse.ArgumentParser(
+        "Run CI related tasks for Python packages in a Docker container"
+    )
+    parser.add_argument(
+        "subcommand", choices=dict(entrypoint._get_commands()).keys()
+    )
 
     args = parser.parse_args(argv)
 

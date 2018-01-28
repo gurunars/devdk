@@ -17,7 +17,9 @@ def _run_yieldable_command(command):
     # like pep8, pylint and mvn write errors to STDOUT and not STDERR.
     # This leads us to really polluted exceptions in case of failures,
     # but unfortunately there is nothing that can be done about it.
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
 
     for line in iter(process.stdout.readline, b""):
         yield line if isinstance(line, str) else line.decode("utf-8")
@@ -41,18 +43,20 @@ def _run_with_accumulation(accumulator, command, silent, printable, capture):
 
 def run_command(command, silent=False, printable=None, capture=False):
     """stdout
-    Execute a command, print output to stdout line by line and return the whole
-    output as a string.
+    Execute a command, print output to stdout line by line and return the
+    whole output as a string.
 
     :param command: shell statements to execute
     :type command: list
     :param silent: if True - output is not printed on the screen
     :type silent: bool
-    :param printable: a function that takes a line as input and returns boolean
-                      denoting whether this line should be printed or not.
+    :param printable: a function that takes a line as input and returns
+                      boolean denoting whether this line should be printed
+                      or not.
                       True if it should be printed. False otherwise.
     :type printable: lambda line: True/False
-    :param capture: if True - all output shall be accumulated and returned as a giant string
+    :param capture: if True - all output shall be accumulated and returned
+                    as a giant string
     :type capture: bool
     :return: output of the command
     :rtype: str

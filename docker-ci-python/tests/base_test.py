@@ -23,7 +23,9 @@ class BaseTest(unittest.TestCase):
         return ModuledBaseTest
 
     def patch(self, what, with_what=None):
-        target = mock.patch(self.MODULE_NAME + "." + what, with_what or mock.Mock())
+        target = mock.patch(
+            self.MODULE_NAME + "." + what, with_what or mock.Mock()
+        )
         patch = target.start()
         self.addCleanup(target.stop)
         return patch
