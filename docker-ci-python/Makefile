@@ -5,7 +5,7 @@ IMG=docker-ci-python
 image:
 	@docker build . -t $(IMG)
 
-help validate tests style-checks build connect repl reformat: image
+help static-checks tests build connect repl reformat: image
 ifdef INTERACTIVE
 	@$(RUN) -it $(IMG) $@
 else
@@ -16,6 +16,7 @@ clean:
 	-@$(RUN) $(IMG) clean > /dev/null 2>&1 | true
 	-@docker rmi -f $(IMG) > /dev/null 2>&1 | true
 
+all: clean static-checks tests build
 
-.PHONY: help validate build style-checks connect tests image clean repl reformat
+.PHONY: help build static-checks connect tests image clean repl reformat all
 .DEFAULT_GOAL: help

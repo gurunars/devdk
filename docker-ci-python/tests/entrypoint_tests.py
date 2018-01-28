@@ -3,13 +3,33 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _full_path, _exists_at, _style_check, \
-    _run_with_safe_error, _rm, _reformat_pkg
+    _run_for_project, _full_path, _exists_at, _static_check, \
+    _run_with_safe_error, _rm, _reformat_pkg, _generate_binary, \
+    _generate_api_docs, _apply_theming
 
 from .base_test import BaseTest
 
 
 class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+
+    def test_generate_binary(self):
+        run = self.patch("_run_for_project")
+        _generate_binary("/project")
+        run.assert_called_once_with(
+            "/project", ["python", "setup.py", "bdist_wheel"]
+        )
+
+    def test_generate_api_docs(self):
+        run = self.patch("_run_for_project")
+        apply_theming = self.patch("_apply_theming")
+        _generate_api_docs("/project", ["one", "two"])
+        self.assertTrue(apply_theming.called)
+        self.assertEqual(3, len(run.call_args_list))
+
+    def test_apply_theming(self):
+        opn = self.patch("open", mock.mock_open(read_data="alabaster"))
+        _apply_theming("/project")
+        opn.return_value.write.assert_called_once_with("sphinx_rtd_theme")
 
     def test_reformat_pkg(self):
         self.patch("_exists_at", lambda location, pkg: True)
@@ -55,10 +75,10 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertTrue(_exists_at("/parent", "exists"))
         self.assertFalse(_exists_at("/parent", "not-exists"))
 
-    def test_style_check(self):
+    def test_static_check(self):
         self.patch("_exists_at", lambda location, pkg: True)
         run = self.patch("_run_for_project")
-        _style_check("/project", "one", "pylintrc")
+        _static_check("/project", "one", "pylintrc")
         self.assertEqual([
             mock.call(
                 '/project', ['pycodestyle', '--max-line-length=79', 'one']
@@ -72,10 +92,10 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             ),
         ], run.call_args_list)
 
-    def test_style_check_doest_not_exist(self):
+    def test_static_check_doest_not_exist(self):
         self.patch("_exists_at", lambda location, pkg: False)
         run = self.patch("_run_for_project")
-        _style_check("/project", "one", "pylintrc")
+        _static_check("/project", "one", "pylintrc")
         self.assertFalse(run.called)
 
     def test_run_with_safe_error(self):
@@ -140,10 +160,12 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.get_packages = self.patch("_get_testable_packages")
         self.exists_at = self.patch("_exists_at")
         self.print_f = self.patch("print")
-        self.style_check = self.patch("_style_check")
+        self.static_check = self.patch("_static_check")
         self.shutil = self.patch("shutil")
         self.rm = self.patch("_rm")
         self.reformat = self.patch("_reformat_pkg")
+        self.gen_docs = self.patch("_generate_api_docs")
+        self.gen_bin = self.patch("_generate_binary")
         self.ep = EntryPoint("/project")
 
     def test_help(self):
@@ -162,12 +184,10 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('\tReformats the code to have the best possible style'),
             mock.call('repl'),
             mock.call('\tRuns ipython within a container'),
-            mock.call('style-checks'),
+            mock.call('static-checks'),
             mock.call('\tRuns pycodestyle, pylint and pyflakes'),
             mock.call('tests'),
-            mock.call('\tRuns unit tests with code coverage'),
-            mock.call('validate'),
-            mock.call('\tstyle-checks + tests'),
+            mock.call('\tRuns unit tests with code coverage')
         ], self.print_f.call_args_list)
 
     def test_repl(self):
@@ -178,15 +198,15 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.ep("connect")
         self.call.assert_called_once_with(["/bin/sh"])
 
-    def test_style_checks(self):
+    def test_static_checks(self):
         self.get_packages.return_value = ["one", "two"]
-        self.ep("style-checks")
+        self.ep("static-checks")
         self.assertEqual([
             mock.call('/project', 'one', 'pylintrc'),
             mock.call('/project', 'two', 'pylintrc'),
             mock.call('/project', 'tests', 'pylintrc-test'),
             mock.call('/project', 'integration_tests', 'pylintrc-test'),
-        ], self.style_check.call_args_list)
+        ], self.static_check.call_args_list)
 
     def test_tests(self):
         self.get_packages.return_value = ["one", "two"]
@@ -204,20 +224,17 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             "/etc/docker-python/coveragerc", "/project/.coveragerc"
         )
 
-    def test_validate(self):
-        self.ep.style_checks = style_checks = mock.Mock()
-        self.ep.tests = tests = mock.Mock()
-        self.ep.validate()
-        self.assertEqual(1, style_checks.call_count)
-        self.assertEqual(1, tests.call_count)
-
     def test_clean(self):
         self.get_packages.return_value = ["one", "two"]
         self.ep.clean()
         print(self.rm.call_args_list)
         self.assertEqual(
-            list(map(lambda path: mock.call("/project", path),
-                     self.ep.ARTIFACTS + ["one.egg-info", "two.egg-info"])),
+            list(
+                map(
+                    lambda path: mock.call("/project", path),
+                    self.ep.ARTIFACTS + ["one.egg-info", "two.egg-info"]
+                )
+            ),
             self.rm.call_args_list,
         )
 
@@ -233,3 +250,9 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             ),
             self.reformat.call_args_list,
         )
+
+    def test_build(self):
+        self.get_packages.return_value = ["one", "two"]
+        self.ep.build()
+        self.gen_docs.assert_called_once_with("/project", ["one", "two"])
+        self.gen_bin.assert_called_once_with("/project")

@@ -70,7 +70,7 @@ def _run_for_project(location, command):
             raise CommandException(error.returncode, command, error.output)
 
 
-def _style_check(location, pkg_name, pylintrc_file):
+def _static_check(location, pkg_name, pylintrc_file):
     if not _exists_at(location, pkg_name):
         return
     run = partial(_run_for_project, location)
@@ -112,14 +112,17 @@ def _apply_theming(location):
 
 def _generate_api_docs(location, pkg_names):
     for pkg_name in pkg_names:
-        _run_for_project(location, [
-            "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
-            pkg_name, "-o", DOCS
-        ])
+        _run_for_project(
+            location,
+            [
+                "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
+                pkg_name, "-o", DOCS
+            ]
+        )
     _apply_theming(location)
-    _run_for_project(location, [
-        "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)
-    ])
+    _run_for_project(
+        location, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
+    )
 
 
 def _generate_binary(location):
@@ -174,7 +177,7 @@ class EntryPoint(object):
         """Connects into the container's bash"""
         subprocess.call(["/bin/sh"])
 
-    def style_checks(self):
+    def static_checks(self):
         """Runs pycodestyle, pylint and pyflakes"""
         pkg_configs = list(
             map(
@@ -185,7 +188,7 @@ class EntryPoint(object):
         test_configs = [("tests", "pylintrc-test"),
                         ("integration_tests", "pylintrc-test")]
         for pkg_name, pylint_rc in pkg_configs + test_configs:
-            _style_check(self._location, pkg_name, pylint_rc)
+            _static_check(self._location, pkg_name, pylint_rc)
 
     def tests(self):
         """Runs unit tests with code coverage"""
@@ -222,11 +225,6 @@ class EntryPoint(object):
         for pkg_name in _get_testable_packages(self._location):
             _rm(self._location, pkg_name + ".egg-info")
 
-    def validate(self):
-        """style-checks + tests"""
-        self.style_checks()
-        self.tests()
-
     def reformat(self):
         """Reformats the code to have the best possible style"""
         test_configs = ["tests", "integration_tests"]
@@ -236,7 +234,6 @@ class EntryPoint(object):
     def build(self):
         """Produces a library package and api docs"""
         _generate_api_docs(
-            self._location,
-            _get_testable_packages(self._location)
+            self._location, _get_testable_packages(self._location)
         )
         _generate_binary(self._location)
