@@ -3,13 +3,15 @@ RUN=docker run --rm -v $(PWD):/project
 IMG=docker-ci-python
 
 
-help validate tests style-checks build connect repl clean reformat:
+help validate build connect repl clean reformat:
 ifdef INTERACTIVE
 	@$(RUN) -it $(IMG) $@
 else
 	@$(RUN) $(IMG) $@
 endif
 
+all: clean validate build
 
-.PHONY: help validate build style-checks connect tests image clean repl reformat
+
+.PHONY: help validate build connect clean repl reformat
 .DEFAULT_GOAL: help

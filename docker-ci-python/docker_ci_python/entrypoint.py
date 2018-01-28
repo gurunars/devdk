@@ -37,8 +37,8 @@ def _run_with_safe_error(cmd, safe_error):
             raise error
 
 
-def _rm(path):
-    path = os.path.join("/project", path)
+def _rm(location, path):
+    path = os.path.join(location, path)
     shutil.rmtree(path, ignore_errors=True)
     if os.path.exists(path):
         os.remove(path)
@@ -98,6 +98,34 @@ def _format_help_string(help_string):
     return " ".join(help_string.replace("\n", "").split())
 
 
+DOCS = "gen-docs"
+
+
+def _apply_theming(location):
+    conf = os.path.join(location, DOCS, "conf.py")
+    with open(conf) as fil:
+        payload = fil.read()
+    payload = payload.replace("alabaster", "sphinx_rtd_theme")
+    with open(conf, "w") as fil:
+        fil.write(payload)
+
+
+def _generate_api_docs(location, pkg_names):
+    for pkg_name in pkg_names:
+        _run_for_project(location, [
+            "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
+            pkg_name, "-o", DOCS
+        ])
+    _apply_theming(location)
+    _run_for_project(location, [
+        "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)
+    ])
+
+
+def _generate_binary(location):
+    _run_for_project(location, ["python", "setup.py", "bdist_wheel"])
+
+
 class EntryPoint(object):
     """
     Docker entry point to run various commands for a Python project
@@ -108,7 +136,8 @@ class EntryPoint(object):
     # pylint: disable=no-self-use
 
     ARTIFACTS = [
-        "coverage", ".coverage", ".coveragerc", "coverage.xml", "nosetests.xml"
+        "coverage", ".coverage", ".coveragerc", "coverage.xml",
+        "nosetests.xml", DOCS, "dist", "build"
     ]
 
     def __init__(self, location):
@@ -189,7 +218,9 @@ class EntryPoint(object):
     def clean(self):
         """Removes all the artifacts produced by the toolchain"""
         for artifact in self.ARTIFACTS:
-            _rm(artifact)
+            _rm(self._location, artifact)
+        for pkg_name in _get_testable_packages(self._location):
+            _rm(self._location, pkg_name + ".egg-info")
 
     def validate(self):
         """style-checks + tests"""
@@ -203,14 +234,9 @@ class EntryPoint(object):
             _reformat_pkg(self._location, pkg_name)
 
     def build(self):
-        """
-        Produces a bundled build artifact (aka software package)
-        and Sphinx based docs
-        """
-        raise NotImplementedError
-
-    def publish(self):
-        """
-        Sends the built code to a binary package storage (e.g. PyPi)
-        """
-        raise NotImplementedError
+        """Produces a library package and api docs"""
+        _generate_api_docs(
+            self._location,
+            _get_testable_packages(self._location)
+        )
+        _generate_binary(self._location)

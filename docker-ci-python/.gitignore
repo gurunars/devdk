@@ -1,3 +1,7 @@
+*.egg-info
+build
+dist
+gen-docs
 .coverage
 .coveragerc
 coverage.xml

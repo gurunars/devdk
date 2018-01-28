@@ -32,7 +32,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.patch("os.path.exists", lambda path: path == "/project/exists")
         remove = self.patch("os.remove")
         rmtree = self.patch("shutil.rmtree")
-        _rm("exists")
+        _rm("/project", "exists")
         remove.assert_called_once_with("/project/exists")
         rmtree.assert_called_once_with("/project/exists", ignore_errors=True)
 
@@ -151,21 +151,13 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         print(self.print_f.call_args_list)
         self.assertEqual([
             mock.call('build'),
-            mock.call(
-                '\tProduces a bundled build artifact (aka software package) '
-                'and Sphinx based docs'
-            ),
+            mock.call('\tProduces a library package and api docs'),
             mock.call('clean'),
             mock.call('\tRemoves all the artifacts produced by the toolchain'),
             mock.call('connect'),
             mock.call('\tConnects into the container\'s bash'),
             mock.call('help'),
             mock.call('\tShows help message'),
-            mock.call('publish'),
-            mock.call(
-                '\tSends the built code to a binary package '
-                'storage (e.g. PyPi)'
-            ),
             mock.call('reformat'),
             mock.call('\tReformats the code to have the best possible style'),
             mock.call('repl'),
@@ -196,10 +188,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call('/project', 'integration_tests', 'pylintrc-test'),
         ], self.style_check.call_args_list)
 
-    def test_not_implemented(self):
-        self.assertRaises(NotImplementedError, self.ep, "build")
-        self.assertRaises(NotImplementedError, self.ep, "publish")
-
     def test_tests(self):
         self.get_packages.return_value = ["one", "two"]
         self.ep("tests")
@@ -224,9 +212,12 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertEqual(1, tests.call_count)
 
     def test_clean(self):
+        self.get_packages.return_value = ["one", "two"]
         self.ep.clean()
+        print(self.rm.call_args_list)
         self.assertEqual(
-            list(map(mock.call, self.ep.ARTIFACTS)),
+            list(map(lambda path: mock.call("/project", path),
+                     self.ep.ARTIFACTS + ["one.egg-info", "two.egg-info"])),
             self.rm.call_args_list,
         )
 

@@ -1,8 +1,12 @@
 #!/usr/bin/python
 import os
+import sys
 
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
+
+
+assert sys.version_info.major == 3, "Only Python 3 is supported"
 
 
 def _pt(name):
