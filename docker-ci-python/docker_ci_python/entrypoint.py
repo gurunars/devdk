@@ -10,6 +10,7 @@ from functools import partial
 import setuptools
 
 from .run_command import run_command, CommandException
+from .read_yaml_config import read_yaml_config
 
 
 def _get_testable_packages(where=os.path.curdir):
@@ -125,14 +126,16 @@ def _generate_api_docs(location, pkg_names):
     )
 
 
+def _generate_pypirc(config):
+    with open(_full_path("~/.pypirc"), "w") as pypirc:
+        pypirc.write(_trim_indent("""
+        []
+        
+        """))
+
+
 def _publish_docs(location):
-    
-
-
-GIT_REPO_DOCUMENTATION_BRANCH = "git-repo-documentation-branch"
-GIT_REPO_SSL_KEY = "git-repo-ssl-key"
-PKG_REPO_USERNAME = "pkg-repo-username"
-PKG_REPO_PASSWORD = "pkg-repo-password"
+    pass
 
 
 class EntryPoint(object):
@@ -199,10 +202,11 @@ class EntryPoint(object):
     def tests(self):
         """Runs unit tests with code coverage"""
         # There is no way to make coverage module show missed lines otherwise
-        shutil.copy(
-            "/etc/docker-python/coveragerc",
-            os.path.join(self._location, ".coveragerc")
-        )
+
+        def _pt(path):
+            return os.path.join(self._location, path)
+
+        shutil.copy("/etc/docker-python/coveragerc", _pt(".coveragerc"))
         _run_for_project(
             self._location,
             [
@@ -216,9 +220,9 @@ class EntryPoint(object):
                 "--cover-min-percentage=100",
                 "--cover-inclusive",
                 "--cover-html",
-                "--cover-html-dir={}".format(os.path.join(self._location, "coverage")),
+                "--cover-html-dir={}".format(_pt("coverage")),
                 "--cover-xml",
-                "--cover-xml-file={}".format(os.path.join(self._location, "coverage.xml"))
+                "--cover-xml-file={}".format(_pt("coverage.xml"))
             ] + list(
                 map(
                     "--cover-package={}".format,

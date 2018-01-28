@@ -7,3 +7,4 @@ gen-docs
 coverage.xml
 coverage/
 nosetests.xml
+.credentials.yaml
