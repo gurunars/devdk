@@ -1,6 +1,6 @@
 import unittest
 
-from example.app import get_some_magic
+from {{cookiecutter.python_name}}.app import get_some_magic
 
 
 class MagicTest(unittest.TestCase):

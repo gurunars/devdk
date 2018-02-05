@@ -1,6 +1,6 @@
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 RUN=docker run --rm -v $(PWD):/project
-IMG=docker-ci-python.cache
+IMG={{cookiecutter.repo_name}}.cache
 
 all: clean static-checks tests build build-docs
 

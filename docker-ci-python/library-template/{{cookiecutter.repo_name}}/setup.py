@@ -31,8 +31,8 @@ def _get_requirements():
 
 
 setup(
-    name="example",
-    provides=["example"],
+    name="{{cookiecutter.python_name}}",
+    provides=["{{cookiecutter.python_name}}"],
     install_requires=_get_requirements(),
     version=_get_version(),
     packages=find_packages(exclude=["tests"]),

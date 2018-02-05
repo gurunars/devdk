@@ -7,3 +7,4 @@ ipython==6.2.1
 yapf==0.20.1
 sphinx_rtd_theme==0.2.5b2
 sphinx==1.7.0b1
+cookiecutter==1.6.0
