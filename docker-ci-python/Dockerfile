@@ -19,5 +19,8 @@ WORKDIR /project
 
 ENTRYPOINT ["entry-point"]
 
+ONBUILD ADD /requirements-dev.txt /project/
+ONBUILD RUN pip install -q -r /project/requirements-dev.txt
+
 ONBUILD ADD /requirements.txt /project/
-ONBUILD RUN pip install -r /project/requirements.txt
+ONBUILD RUN pip install -q -r /project/requirements.txt
