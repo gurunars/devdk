@@ -101,15 +101,6 @@ def _format_help_string(help_string):
 DOCS = "gen-docs"
 
 
-def _apply_theming(location):
-    conf = os.path.join(location, DOCS, "conf.py")
-    with open(conf) as fil:
-        payload = fil.read()
-    payload = payload.replace("alabaster", "sphinx_rtd_theme")
-    with open(conf, "w") as fil:
-        fil.write(payload)
-
-
 def _generate_api_docs(location, pkg_names):
     for pkg_name in pkg_names:
         _run_for_project(
@@ -119,7 +110,6 @@ def _generate_api_docs(location, pkg_names):
                 pkg_name, "-o", DOCS
             ]
         )
-    _apply_theming(location)
     _run_for_project(
         location, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
     )
