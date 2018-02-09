@@ -20,8 +20,8 @@ def _get_testable_packages(where=os.path.curdir):
     ]
 
 
-def _exists_at(parent, child):
-    return os.path.exists(os.path.join(parent, child))
+def _exists(*args):
+    return os.path.exists(os.path.join(*args))
 
 
 def _run_with_safe_error(cmd, safe_error):
@@ -66,7 +66,7 @@ def _run_for_project(location, command):
 
 
 def _static_check(project_path, config_path, pkg_name, pylintrc_file):
-    if not _exists_at(project_path, pkg_name):
+    if not _exists(project_path, pkg_name):
         return
     run = partial(_run_for_project, project_path)
     run(["pycodestyle", "--max-line-length=79", pkg_name])
@@ -78,7 +78,7 @@ def _static_check(project_path, config_path, pkg_name, pylintrc_file):
 
 
 def _reformat_pkg(project_path, config_path, pkg_name):
-    if not _exists_at(project_path, pkg_name):
+    if not _exists(project_path, pkg_name):
         return
     _run_for_project(
         project_path,

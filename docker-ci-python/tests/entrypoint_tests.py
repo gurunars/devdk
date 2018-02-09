@@ -3,7 +3,7 @@ from unittest import mock
 from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
-    _run_for_project, _exists_at, _static_check, \
+    _run_for_project, _exists, _static_check, \
     _run_with_safe_error, _rm, _reformat_pkg, \
     _generate_api_docs
 
@@ -18,7 +18,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.assertEqual(3, len(run.call_args_list))
 
     def test_reformat_pkg(self):
-        self.patch("_exists_at", lambda location, pkg: True)
+        self.patch("_exists", lambda location, pkg: True)
         run = self.patch("_run_for_project")
         _reformat_pkg("location", "/etc/docker-python", "pkg_name")
         run.assert_called_once_with(
@@ -29,7 +29,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         )
 
     def test_reformat_pkg_does_not_exist(self):
-        self.patch("_exists_at", lambda location, pkg: False)
+        self.patch("_exists", lambda location, pkg: False)
         run = self.patch("_run_for_project")
         _reformat_pkg("location", "/etc/docker-python", "pkg_name")
         self.assertFalse(run.called)
@@ -50,13 +50,13 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             ".", exclude=["tests", "integration_tests"]
         )
 
-    def test_exists_at(self):
+    def test_exists(self):
         self.patch("os.path.exists", lambda path: path == "/parent/exists")
-        self.assertTrue(_exists_at("/parent", "exists"))
-        self.assertFalse(_exists_at("/parent", "not-exists"))
+        self.assertTrue(_exists("/parent", "exists"))
+        self.assertFalse(_exists("/parent", "not-exists"))
 
     def test_static_check(self):
-        self.patch("_exists_at", lambda location, pkg: True)
+        self.patch("_exists", lambda location, pkg: True)
         run = self.patch("_run_for_project")
         _static_check("/project", "/etc/docker-python", "one", "pylintrc")
         self.assertEqual([
@@ -73,7 +73,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         ], run.call_args_list)
 
     def test_static_check_doest_not_exist(self):
-        self.patch("_exists_at", lambda location, pkg: False)
+        self.patch("_exists", lambda location, pkg: False)
         run = self.patch("_run_for_project")
         _static_check("/project", "/etc/docker-python", "one", "pylintrc")
         self.assertFalse(run.called)
@@ -137,7 +137,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.call = self.patch("subprocess.call")
         self.run = self.patch("_run_for_project")
         self.get_packages = self.patch("_get_testable_packages")
-        self.exists_at = self.patch("_exists_at")
+        self.exists_at = self.patch("_exists")
         self.print_f = self.patch("print")
         self.static_check = self.patch("_static_check")
         self.shutil = self.patch("shutil")
