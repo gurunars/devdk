@@ -45,7 +45,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_get_testable_packages(self):
         find_pkgs = self.patch("setuptools").find_packages
         find_pkgs.return_value = ["one", "two", "one.subone"]
-        self.assertEqual(["one", "two"], _get_testable_packages())
+        self.assertEqual(["one", "two"], _get_testable_packages("."))
         find_pkgs.assert_called_once_with(
             ".", exclude=["tests", "integration_tests"]
         )

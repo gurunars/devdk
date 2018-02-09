@@ -12,16 +12,15 @@ import setuptools
 from .run_command import run_command, CommandException
 
 
-def _get_testable_packages(where=os.path.curdir):
-    return [
-        pkg for pkg in setuptools.
-        find_packages(where, exclude=["tests", "integration_tests"])
-        if "." not in pkg
-    ]
-
-
 def _exists(*args):
     return os.path.exists(os.path.join(*args))
+
+
+def _rm(*args):
+    path = os.path.join(*args)
+    shutil.rmtree(path, ignore_errors=True)
+    if os.path.exists(path):
+        os.remove(path)
 
 
 def _run_with_safe_error(cmd, safe_error):
@@ -33,18 +32,11 @@ def _run_with_safe_error(cmd, safe_error):
             raise error
 
 
-def _rm(location, path):
-    path = os.path.join(location, path)
-    shutil.rmtree(path, ignore_errors=True)
-    if os.path.exists(path):
-        os.remove(path)
+def _run_for_project(project_path, command):
+    if not os.path.exists(project_path):
+        sys.exit("'{}' directory does not exist".format(project_path))
 
-
-def _run_for_project(location, command):
-    if not os.path.exists(location):
-        sys.exit("'{}' directory does not exist".format(location))
-
-    stat_info = os.stat(location)
+    stat_info = os.stat(project_path)
     uid = stat_info.st_uid
     gid = stat_info.st_gid
 
@@ -63,6 +55,14 @@ def _run_for_project(location, command):
             return run_command(["sudo", "-E", "-S", "-u", "tester"] + command)
         except CommandException as error:
             raise CommandException(error.returncode, command, error.output)
+
+
+def _get_testable_packages(project_path):
+    return [
+        pkg for pkg in setuptools.
+            find_packages(project_path, exclude=["tests", "integration_tests"])
+        if "." not in pkg
+    ]
 
 
 def _static_check(project_path, config_path, pkg_name, pylintrc_file):
@@ -96,17 +96,17 @@ def _format_help_string(help_string):
 DOCS = "gen-docs"
 
 
-def _generate_api_docs(location, pkg_names):
+def _generate_api_docs(project_path, pkg_names):
     for pkg_name in pkg_names:
         _run_for_project(
-            location,
+            project_path,
             [
                 "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
                 pkg_name, "-o", DOCS
             ]
         )
     _run_for_project(
-        location, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
+        project_path, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
     )
 
 
