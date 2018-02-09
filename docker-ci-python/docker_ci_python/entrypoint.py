@@ -110,10 +110,6 @@ def _generate_api_docs(location, pkg_names):
     )
 
 
-def _generate_binary(location):
-    _run_for_project(location, ["python", "setup.py", "bdist_wheel"])
-
-
 class EntryPoint(object):
     """
     Docker entry point to run various commands for a Python project
@@ -222,7 +218,7 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        _generate_binary(self._project_path)
+        _run_for_project(self._project_path, ["python", "setup.py", "bdist_wheel"])
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""

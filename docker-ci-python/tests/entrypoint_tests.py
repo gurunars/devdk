@@ -4,20 +4,13 @@ from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
     _run_for_project, _exists_at, _static_check, \
-    _run_with_safe_error, _rm, _reformat_pkg, _generate_binary, \
+    _run_with_safe_error, _rm, _reformat_pkg, \
     _generate_api_docs
 
 from .base_test import BaseTest
 
 
 class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
-
-    def test_generate_binary(self):
-        run = self.patch("_run_for_project")
-        _generate_binary("/project")
-        run.assert_called_once_with(
-            "/project", ["python", "setup.py", "bdist_wheel"]
-        )
 
     def test_generate_api_docs(self):
         run = self.patch("_run_for_project")
@@ -151,7 +144,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.rm = self.patch("_rm")
         self.reformat = self.patch("_reformat_pkg")
         self.gen_docs = self.patch("_generate_api_docs")
-        self.gen_bin = self.patch("_generate_binary")
         self.ep = EntryPoint("/project", "/etc/docker-python")
 
     def test_help(self):
@@ -243,7 +235,9 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def test_build(self):
         self.ep.build()
-        self.gen_bin.assert_called_once_with("/project")
+        self.run.assert_called_once_with(
+            "/project", ["python", "setup.py", "bdist_wheel"]
+        )
 
     def test_build_docs(self):
         self.get_packages.return_value = ["one", "two"]
