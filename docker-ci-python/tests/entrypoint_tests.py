@@ -4,18 +4,12 @@ from docker_ci_python.run_command import CommandException
 
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
     _run_for_project, _exists, _static_check, \
-    _run_with_safe_error, _rm, _reformat_pkg, \
-    _generate_api_docs
+    _run_with_safe_error, _rm, _reformat_pkg
 
 from .base_test import BaseTest
 
 
 class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
-
-    def test_generate_api_docs(self):
-        run = self.patch("_run_for_project")
-        _generate_api_docs("/project", ["one", "two"])
-        self.assertEqual(3, len(run.call_args_list))
 
     def test_reformat_pkg(self):
         self.patch("_exists", lambda location, pkg: True)
@@ -143,7 +137,6 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.shutil = self.patch("shutil")
         self.rm = self.patch("_rm")
         self.reformat = self.patch("_reformat_pkg")
-        self.gen_docs = self.patch("_generate_api_docs")
         self.ep = EntryPoint("/project", "/etc/docker-python")
 
     def test_help(self):
@@ -242,4 +235,4 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_build_docs(self):
         self.get_packages.return_value = ["one", "two"]
         self.ep.build_docs()
-        self.gen_docs.assert_called_once_with("/project", ["one", "two"])
+        self.assertEqual(3, len(self.run.call_args_list))

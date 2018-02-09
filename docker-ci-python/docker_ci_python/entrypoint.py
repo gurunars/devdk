@@ -96,20 +96,6 @@ def _format_help_string(help_string):
 DOCS = "gen-docs"
 
 
-def _generate_api_docs(project_path, pkg_names):
-    for pkg_name in pkg_names:
-        _run_for_project(
-            project_path,
-            [
-                "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
-                pkg_name, "-o", DOCS
-            ]
-        )
-    _run_for_project(
-        project_path, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
-    )
-
-
 class EntryPoint(object):
     """
     Docker entry point to run various commands for a Python project
@@ -222,6 +208,14 @@ class EntryPoint(object):
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
-        _generate_api_docs(
-            self._project_path, _get_testable_packages(self._project_path)
+        for pkg_name in _get_testable_packages(self._project_path):
+            _run_for_project(
+                self._project_path,
+                [
+                    "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
+                    pkg_name, "-o", DOCS
+                ]
+            )
+        _run_for_project(
+            self._project_path, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
         )
