@@ -16,6 +16,10 @@ def _exists(*args):
     return os.path.exists(os.path.join(*args))
 
 
+def _wrap(strings, fmt):
+    return list(map(lambda string: fmt.format(string), strings))
+
+
 def _rm(*args):
     path = os.path.join(*args)
     shutil.rmtree(path, ignore_errors=True)
@@ -130,7 +134,11 @@ class EntryPoint(object):
                 )
 
     def _run(self, args):
-        _run_for_project(self._project_path, args)
+        return _run_for_project(self._project_path, args)
+
+    @property
+    def _modules(self):
+        return _get_testable_packages(self._project_path)
 
     # We do want it to be called help
     # pylint: disable=redefined-builtin
@@ -153,7 +161,7 @@ class EntryPoint(object):
         pkg_configs = list(
             map(
                 lambda pkg: (pkg, "pylintrc"),
-                _get_testable_packages(self._project_path)
+                self._modules
             )
         )
         test_configs = [("tests", "pylintrc-test"),
@@ -183,25 +191,17 @@ class EntryPoint(object):
                 "--cover-html-dir={}/coverage".format(self._project_path),
                 "--cover-xml",
                 "--cover-xml-file={}/coverage.xml".format(self._project_path)
-            ] + list(
-                map(
-                    "--cover-package={}".format,
-                    _get_testable_packages(self._project_path)
-                )
-            )
+            ] + _wrap(self._modules, "--cover-package={}")
         )
 
     def clean(self):
         """Removes all the artifacts produced by the toolchain"""
-        for artifact in self.ARTIFACTS:
+        for artifact in self.ARTIFACTS + _wrap(self._modules, "{}.egg-info"):
             _rm(self._project_path, artifact)
-        for pkg_name in _get_testable_packages(self._project_path):
-            _rm(self._project_path, pkg_name + ".egg-info")
 
     def reformat(self):
         """Reformats the code to have the best possible style"""
-        test_configs = ["tests", "integration_tests"]
-        for pkg_name in _get_testable_packages(self._project_path) + test_configs:
+        for pkg_name in ["tests", "integration_tests"] + self._modules:
             _reformat_pkg(self._project_path, self._config_path, pkg_name)
 
     def build(self):
@@ -210,10 +210,10 @@ class EntryPoint(object):
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
-        for pkg_name in _get_testable_packages(self._project_path):
+        for module in self._modules:
             self._run([
                 "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
-                pkg_name, "-o", DOCS
+                module, "-o", DOCS
             ])
         self._run([
             "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)

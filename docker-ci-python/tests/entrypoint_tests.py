@@ -220,7 +220,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             list(
                 map(
                     lambda pkg: mock.call("/project", "/etc/docker-python", pkg),
-                    ["one", "two", "tests", "integration_tests"]
+                    ["tests", "integration_tests", "one", "two"]
                 )
             ),
             self.reformat.call_args_list,
