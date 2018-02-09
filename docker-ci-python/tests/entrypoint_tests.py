@@ -5,7 +5,7 @@ from docker_ci_python.run_command import CommandException
 from docker_ci_python.entrypoint import EntryPoint, _get_testable_packages, \
     _run_for_project, _full_path, _exists_at, _static_check, \
     _run_with_safe_error, _rm, _reformat_pkg, _generate_binary, \
-    _generate_api_docs, _apply_theming
+    _generate_api_docs
 
 from .base_test import BaseTest
 
@@ -21,15 +21,8 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def test_generate_api_docs(self):
         run = self.patch("_run_for_project")
-        apply_theming = self.patch("_apply_theming")
         _generate_api_docs("/project", ["one", "two"])
-        self.assertTrue(apply_theming.called)
         self.assertEqual(3, len(run.call_args_list))
-
-    def test_apply_theming(self):
-        opn = self.patch("open", mock.mock_open(read_data="alabaster"))
-        _apply_theming("/project")
-        opn.return_value.write.assert_called_once_with("sphinx_rtd_theme")
 
     def test_reformat_pkg(self):
         self.patch("_exists_at", lambda location, pkg: True)

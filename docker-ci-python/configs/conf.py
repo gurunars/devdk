@@ -1,5 +1,6 @@
 project = '{project_name}'
 copyright = '{year}, {author}'
+author = '{author}'
 
 version = '{version}'
 
