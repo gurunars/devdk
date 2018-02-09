@@ -129,6 +129,9 @@ class EntryPoint(object):
                     _format_help_string(field.__doc__)
                 )
 
+    def _run(self, args):
+        _run_for_project(self._project_path, args)
+
     # We do want it to be called help
     # pylint: disable=redefined-builtin
     def help(self):
@@ -165,8 +168,7 @@ class EntryPoint(object):
             "{}/coveragerc".format(self._config_path),
             "{}/.coveragerc".format(self._project_path)
         )
-        _run_for_project(
-            self._project_path,
+        self._run(
             [
                 "nosetests",
                 "-v",
@@ -204,18 +206,15 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        _run_for_project(self._project_path, ["python", "setup.py", "bdist_wheel"])
+        self._run(["python", "setup.py", "bdist_wheel"])
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
         for pkg_name in _get_testable_packages(self._project_path):
-            _run_for_project(
-                self._project_path,
-                [
-                    "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
-                    pkg_name, "-o", DOCS
-                ]
-            )
-        _run_for_project(
-            self._project_path, ["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)]
-        )
+            self._run([
+                "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
+                pkg_name, "-o", DOCS
+            ])
+        self._run([
+            "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)
+        ])
