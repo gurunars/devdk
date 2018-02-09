@@ -10,7 +10,7 @@ from .run_command import CommandException
 
 
 def main(argv=None):
-    entrypoint = EntryPoint("/project")
+    entrypoint = EntryPoint("/project", "/etc/docker-python")
 
     parser = argparse.ArgumentParser(
         "Run CI related tasks for Python packages in a Docker container"

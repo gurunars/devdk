@@ -20,10 +20,6 @@ def _get_testable_packages(where=os.path.curdir):
     ]
 
 
-def _full_path(path):
-    return os.path.abspath(os.path.expanduser(path))
-
-
 def _exists_at(parent, child):
     return os.path.exists(os.path.join(parent, child))
 
@@ -60,8 +56,7 @@ def _run_for_project(location, command):
             "addgroup: group 'tester' in use"
         )
         _run_with_safe_error(
-            ["adduser", "-D", "-u",
-             str(uid), "-G", "tester", "tester"],
+            ["adduser", "-D", "-u", str(uid), "-G", "tester", "tester"],
             "adduser: user 'tester' in use"
         )
         try:
@@ -70,25 +65,25 @@ def _run_for_project(location, command):
             raise CommandException(error.returncode, command, error.output)
 
 
-def _static_check(location, pkg_name, pylintrc_file):
-    if not _exists_at(location, pkg_name):
+def _static_check(project_path, config_path, pkg_name, pylintrc_file):
+    if not _exists_at(project_path, pkg_name):
         return
-    run = partial(_run_for_project, location)
+    run = partial(_run_for_project, project_path)
     run(["pycodestyle", "--max-line-length=79", pkg_name])
     run(["pyflakes", pkg_name])
     run([
         "custom-pylint", "--persistent=n",
-        "--rcfile=/etc/docker-python/{}".format(pylintrc_file), pkg_name
+        "--rcfile={}".format(os.path.join(config_path, pylintrc_file)), pkg_name
     ])
 
 
-def _reformat_pkg(location, pkg_name):
-    if not _exists_at(location, pkg_name):
+def _reformat_pkg(project_path, config_path, pkg_name):
+    if not _exists_at(project_path, pkg_name):
         return
     _run_for_project(
-        location,
+        project_path,
         [
-            "yapf", "-i", "-r", "-p", "--style", "/etc/docker-python/yapf",
+            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(config_path),
             pkg_name
         ]
     )
@@ -133,8 +128,9 @@ class EntryPoint(object):
         "nosetests.xml", DOCS, "dist", "build"
     ]
 
-    def __init__(self, location):
-        self._location = _full_path(location)
+    def __init__(self, project_path, config_path):
+        self._project_path = project_path.rstrip("/")
+        self._config_path = config_path.rstrip("/")
 
     def __call__(self, command):
         runnable = getattr(self, command.replace("-", "_"))
@@ -172,20 +168,23 @@ class EntryPoint(object):
         pkg_configs = list(
             map(
                 lambda pkg: (pkg, "pylintrc"),
-                _get_testable_packages(self._location)
+                _get_testable_packages(self._project_path)
             )
         )
         test_configs = [("tests", "pylintrc-test"),
                         ("integration_tests", "pylintrc-test")]
         for pkg_name, pylint_rc in pkg_configs + test_configs:
-            _static_check(self._location, pkg_name, pylint_rc)
+            _static_check(self._project_path, self._config_path, pkg_name, pylint_rc)
 
     def tests(self):
         """Runs unit tests with code coverage"""
         # There is no way to make coverage module show missed lines otherwise
-        shutil.copy("/etc/docker-python/coveragerc", "/project/.coveragerc")
+        shutil.copy(
+            "{}/coveragerc".format(self._config_path),
+            "{}/.coveragerc".format(self._project_path)
+        )
         _run_for_project(
-            self._location,
+            self._project_path,
             [
                 "nosetests",
                 "-v",
@@ -197,13 +196,13 @@ class EntryPoint(object):
                 "--cover-min-percentage=100",
                 "--cover-inclusive",
                 "--cover-html",
-                "--cover-html-dir=/project/coverage",
+                "--cover-html-dir={}/coverage".format(self._project_path),
                 "--cover-xml",
-                "--cover-xml-file=/project/coverage.xml"
+                "--cover-xml-file={}/coverage.xml".format(self._project_path)
             ] + list(
                 map(
                     "--cover-package={}".format,
-                    _get_testable_packages(self._location)
+                    _get_testable_packages(self._project_path)
                 )
             )
         )
@@ -211,22 +210,22 @@ class EntryPoint(object):
     def clean(self):
         """Removes all the artifacts produced by the toolchain"""
         for artifact in self.ARTIFACTS:
-            _rm(self._location, artifact)
-        for pkg_name in _get_testable_packages(self._location):
-            _rm(self._location, pkg_name + ".egg-info")
+            _rm(self._project_path, artifact)
+        for pkg_name in _get_testable_packages(self._project_path):
+            _rm(self._project_path, pkg_name + ".egg-info")
 
     def reformat(self):
         """Reformats the code to have the best possible style"""
         test_configs = ["tests", "integration_tests"]
-        for pkg_name in _get_testable_packages(self._location) + test_configs:
-            _reformat_pkg(self._location, pkg_name)
+        for pkg_name in _get_testable_packages(self._project_path) + test_configs:
+            _reformat_pkg(self._project_path, self._config_path, pkg_name)
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        _generate_binary(self._location)
+        _generate_binary(self._project_path)
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
         _generate_api_docs(
-            self._location, _get_testable_packages(self._location)
+            self._project_path, _get_testable_packages(self._project_path)
         )
