@@ -19,6 +19,6 @@ WORKDIR /project
 
 ENTRYPOINT ["entry-point"]
 
-ONBUILD ADD /requirements.txt /requirements*.txt /project/
+ONBUILD COPY setup.* /requirements*.txt /project/
 ONBUILD RUN sh /build/docker/install-if-exists.sh requirements-dev.txt
 ONBUILD RUN sh /build/docker/install-if-exists.sh requirements.txt
