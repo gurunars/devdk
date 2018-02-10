@@ -19,8 +19,6 @@ WORKDIR /project
 
 ENTRYPOINT ["entry-point"]
 
-ONBUILD ADD /requirements-dev.txt /project/
-ONBUILD RUN pip install -q -r /project/requirements-dev.txt
-
-ONBUILD ADD /requirements.txt /project/
-ONBUILD RUN pip install -q -r /project/requirements.txt
+ONBUILD ADD /requirements.txt /requirements*.txt /project/
+ONBUILD RUN sh /build/docker/install-if-exists.sh requirements-dev.txt
+ONBUILD RUN sh /build/docker/install-if-exists.sh requirements.txt

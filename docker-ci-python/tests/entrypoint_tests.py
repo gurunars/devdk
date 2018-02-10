@@ -212,8 +212,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.ep("tests")
         cmd = [
             'nosetests', '-v', '--with-xunit', '-e', 'integration_tests',
-            '--cover-erase', '--with-coverage', '--cover-min-percentage=100',
-            '--cover-inclusive', '--cover-html',
+            '--cover-erase', '--with-coverage', '--with-doctest',
+            '--cover-min-percentage=100', '--cover-inclusive', '--cover-html',
             '--cover-html-dir=/project/coverage', '--cover-xml',
             '--cover-xml-file=/project/coverage.xml', '--cover-package=one',
             '--cover-package=two'
