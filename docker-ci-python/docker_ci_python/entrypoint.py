@@ -204,6 +204,7 @@ class EntryPoint(object):
                 "integration_tests",
                 "--cover-erase",  # To get proper stats
                 "--with-coverage",
+                "--with-doctest",
                 "--cover-min-percentage=100",
                 "--cover-inclusive",
                 "--cover-html",
