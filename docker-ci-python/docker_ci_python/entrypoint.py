@@ -5,8 +5,6 @@ import shutil
 import subprocess
 import sys
 
-from functools import partial
-
 import setuptools
 
 from .run_command import run_command, CommandException
@@ -61,43 +59,47 @@ def _run_for_project(project_path, command):
             raise CommandException(error.returncode, command, error.output)
 
 
-def _get_testable_packages(project_path):
-    return [
-        pkg for pkg in setuptools.
-            find_packages(project_path, exclude=["tests", "integration_tests"])
-        if "." not in pkg
-    ]
-
-
-def _static_check(project_path, config_path, pkg_name, pylintrc_file):
-    if not _exists(project_path, pkg_name):
-        return
-    run = partial(_run_for_project, project_path)
-    run(["pycodestyle", "--max-line-length=79", pkg_name])
-    run(["pyflakes", pkg_name])
-    run([
-        "custom-pylint", "--persistent=n",
-        "--rcfile={}".format(os.path.join(config_path, pylintrc_file)), pkg_name
-    ])
-
-
-def _reformat_pkg(project_path, config_path, pkg_name):
-    if not _exists(project_path, pkg_name):
-        return
-    _run_for_project(
-        project_path,
-        [
-            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(config_path),
-            pkg_name
-        ]
-    )
-
-
 def _format_help_string(help_string):
     return " ".join(help_string.replace("\n", "").split())
 
 
 DOCS = "gen-docs"
+
+
+class PackageUtils(object):
+
+    def __init__(self, project_path, config_path):
+        self._project_path = project_path
+        self._config_path = config_path
+
+    def _run(self, args):
+        return _run_for_project(self._project_path, args)
+
+    def reformat_pkg(self, module_name):
+        if not _exists(self._project_path, module_name):
+            return
+        self._run([
+            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(self._config_path),
+            module_name
+        ])
+
+    def static_check(self, module_name, pylintrc_file):
+        if not _exists(self._project_path, module_name):
+            return
+        run = self._run
+        run(["pycodestyle", "--max-line-length=79", module_name])
+        run(["pyflakes", module_name])
+        run([
+            "custom-pylint", "--persistent=n",
+            "--rcfile={}".format(os.path.join(self._config_path, pylintrc_file)), module_name
+        ])
+
+    def get_testable_packages(self):
+        return [
+            pkg for pkg in setuptools.find_packages(
+                self._project_path, exclude=["tests", 'integration_tests']
+            ) if "." not in pkg
+        ]
 
 
 class EntryPoint(object):
@@ -115,8 +117,9 @@ class EntryPoint(object):
     ]
 
     def __init__(self, project_path, config_path):
-        self._project_path = project_path.rstrip("/")
-        self._config_path = config_path.rstrip("/")
+        self._project_path = project_path
+        self._config_path = config_path
+        self._package_utils = PackageUtils(project_path, config_path)
 
     def __call__(self, command):
         runnable = getattr(self, command.replace("-", "_"))
@@ -138,20 +141,22 @@ class EntryPoint(object):
 
     @property
     def _modules(self):
-        return _get_testable_packages(self._project_path)
+        return self._package_utils.get_testable_packages()
 
     # We do want it to be called help
     # pylint: disable=redefined-builtin
     def help(self):
         """Shows help message"""
-        for name, help in self._get_commands():
+        for name, _help in self._get_commands():
             print(name)
-            print("\t{}".format(help))
+            print("\t{}".format(_help))
 
+    # noinspection PyMethodMayBeStatic
     def repl(self):
         """Runs ipython within a container"""
         subprocess.call(["ipython"])
 
+    # noinspection PyMethodMayBeStatic
     def connect(self):
         """Connects into the container's bash"""
         subprocess.call(["/bin/sh"])
@@ -167,7 +172,7 @@ class EntryPoint(object):
         test_configs = [("tests", "pylintrc-test"),
                         ("integration_tests", "pylintrc-test")]
         for pkg_name, pylint_rc in pkg_configs + test_configs:
-            _static_check(self._project_path, self._config_path, pkg_name, pylint_rc)
+            self._package_utils.static_check(pkg_name, pylint_rc)
 
     def tests(self):
         """Runs unit tests with code coverage"""
@@ -202,7 +207,7 @@ class EntryPoint(object):
     def reformat(self):
         """Reformats the code to have the best possible style"""
         for pkg_name in ["tests", "integration_tests"] + self._modules:
-            _reformat_pkg(self._project_path, self._config_path, pkg_name)
+            self._package_utils.reformat_pkg(pkg_name)
 
     def build(self):
         """Produces a library package in the form of wheel package"""
