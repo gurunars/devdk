@@ -1,5 +1,5 @@
 project = '{project_name}'
-copyright = '{year}, {author}'
+copyright = 'by {author}'
 author = '{author}'
 
 version = '{version}'

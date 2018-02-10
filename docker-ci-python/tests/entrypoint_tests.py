@@ -88,6 +88,20 @@ class PackageUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.utils.reformat_pkg("module_name")
         self.assertFalse(self.run.called)
 
+    def test_copy_conifg(self):
+        _open = self.patch("open", mock.MagicMock())
+        self.utils.copy_config()
+        self.assertEqual([
+            mock.call("/etc/docker-python/conf.py"),
+            mock.call("/project/gen-docs/conf.py", "w")
+        ], _open.call_args_list)
+        self.assertEqual([
+            mock.call("/project", ["python", "setup.py", "--name"]),
+            mock.call("/project", ["python", "setup.py", "--version"]),
+            mock.call("/project", ["python", "setup.py", "--author"])
+        ], self.run.call_args_list)
+
+
 
 class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
@@ -141,6 +155,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.get_packages = utils.get_testable_packages
         self.static_check = utils.static_check
         self.reformat = utils.reformat_pkg
+        self.copy_config = utils.copy_config
 
         self.exists_at = self.patch("_exists")
         self.print_f = self.patch("print")
@@ -245,3 +260,4 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.get_packages.return_value = ["one", "two"]
         self.ep.build_docs()
         self.assertEqual(3, len(self.run.call_args_list))
+        self.assertTrue(self.copy_config.called)

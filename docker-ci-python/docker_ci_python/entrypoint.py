@@ -101,6 +101,20 @@ class PackageUtils(object):
             ) if "." not in pkg
         ]
 
+    def copy_config(self):
+        with open("{}/conf.py".format(self._config_path)) as fil:
+            config = fil.read()
+
+        def _meta(title):
+            self._run(["python", "setup.py", "--{}".format(title)])
+
+        with open(os.path.join(self._project_path, DOCS, "conf.py"), "w") as fil:
+            fil.write(config.format(
+                project_name=_meta("name"),
+                version=_meta("version"),
+                author=_meta("author")
+            ))
+
 
 class EntryPoint(object):
     """
@@ -220,6 +234,7 @@ class EntryPoint(object):
                 "sphinx-apidoc", "-f", "-M", "-F", "-T", "-E", "-d", "6",
                 module, "-o", DOCS
             ])
+        self._package_utils.copy_config()
         self._run([
             "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)
         ])

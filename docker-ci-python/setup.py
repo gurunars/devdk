@@ -33,6 +33,7 @@ def _get_requirements():
 setup(
     name="docker-ci-python",
     provides=["docker_ci_python"],
+    author="Anton Berezin",
     install_requires=_get_requirements(),
     version=_get_version(),
     data_files=[('/etc/docker-python', [
