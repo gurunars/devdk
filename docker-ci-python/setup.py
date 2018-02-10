@@ -40,7 +40,8 @@ setup(
         'configs/pylintrc',
         'configs/pylintrc-test',
         'configs/coveragerc',
-        'configs/yapf'
+        'configs/yapf',
+        'configs/conf.py'
     ])],
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
