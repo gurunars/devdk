@@ -106,7 +106,7 @@ class PackageUtils(object):
             config = fil.read()
 
         def _meta(title):
-            self._run(["python", "setup.py", "--{}".format(title)])
+            self._run(["python", os.path.join(self._config_path, "setup.py"), "--{}".format(title)])
 
         with open(os.path.join(self._project_path, DOCS, "conf.py"), "w") as fil:
             fil.write(config.format(
@@ -226,7 +226,7 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        self._run(["python", "setup.py", "bdist_wheel"])
+        self._run(["python", os.path.join(self._config_path, "setup.py"), "bdist_wheel"])
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
