@@ -33,7 +33,7 @@ def _get_long_description():
 def _get_requirements():
     req_f = _pt("requirements.txt")
     if os.path.exists(req_f):
-        return [str(ir.req) for ir in parse_requirements(req_f)]
+        return [str(ir.req) for ir in parse_requirements(req_f, session=False)]
     else:
         return []
 

@@ -2,7 +2,7 @@ from unittest import mock
 
 from docker_ci_python.run_command import CommandException
 
-from docker_ci_python.entrypoint import EntryPoint, PackageUtils, \
+from docker_ci_python.entrypoint import EntryPoint, ModuleUtils, \
     _run_for_project, _exists, _run_with_safe_error, _rm
 
 from .base_test import BaseTest
@@ -35,11 +35,11 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             _run_with_safe_error(["cmd"], "SAFE")
 
 
-class PackageUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+class ModuleUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
 
     def setUp(self):
         self.run = self.patch("_run_for_project")
-        self.utils = PackageUtils("/project", "/etc/docker-python")
+        self.utils = ModuleUtils("/project", "/etc/docker-python")
 
     def _ex(self, flag):
         self.patch("_exists", lambda location, pkg: flag)
@@ -157,7 +157,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.call = self.patch("subprocess.call")
         self.run = self.patch("_run_for_project")
 
-        utils = self.patch("PackageUtils").return_value
+        utils = self.patch("ModuleUtils").return_value
 
         self.get_packages = utils.get_testable_packages
         self.static_check = utils.static_check

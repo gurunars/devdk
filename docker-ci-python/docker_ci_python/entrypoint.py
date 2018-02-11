@@ -69,7 +69,8 @@ def _format_help_string(help_string):
 DOCS = "gen-docs"
 
 
-class PackageUtils(object):
+class ModuleUtils(object):
+    # pylint: disable=missing-docstring
 
     def __init__(self, project_path, config_path):
         self._project_path = project_path
@@ -78,6 +79,7 @@ class PackageUtils(object):
     def _run(self, args):
         return _run_for_project(self._project_path, args)
 
+    # pylint: disable=missing-docstring
     def reformat_pkg(self, module_name):
         if not _exists(self._project_path, module_name):
             return
@@ -87,6 +89,7 @@ class PackageUtils(object):
             module_name
         ])
 
+    # pylint: disable=missing-docstring
     def static_check(self, module_name, pylintrc_file):
         if not _exists(self._project_path, module_name):
             return
@@ -99,6 +102,7 @@ class PackageUtils(object):
                                               pylintrc_file)), module_name
         ])
 
+    # pylint: disable=missing-docstring
     def get_testable_packages(self):
         return [
             pkg for pkg in setuptools.find_packages(
@@ -106,6 +110,7 @@ class PackageUtils(object):
             ) if "." not in pkg
         ]
 
+    # pylint: disable=missing-docstring
     def copy_config(self):
         with open("{}/conf.py".format(self._config_path)) as fil:
             config = fil.read()
@@ -144,7 +149,7 @@ class EntryPoint(object):
     def __init__(self, project_path, config_path):
         self._project_path = project_path
         self._config_path = config_path
-        self._package_utils = PackageUtils(project_path, config_path)
+        self._package_utils = ModuleUtils(project_path, config_path)
 
     def __call__(self, command):
         runnable = getattr(self, command.replace("-", "_"))
