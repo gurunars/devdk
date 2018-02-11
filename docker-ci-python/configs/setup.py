@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import os
 import sys
 
@@ -17,6 +16,8 @@ def _pt(name):
 
 
 def _read(name):
+    if not os.path.exists(name):
+        return "<TBD>"
     with open(_pt(name)) as fil:
         return fil.read()
 
