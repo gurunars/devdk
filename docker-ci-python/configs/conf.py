@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append('/project')
+
 project = '{project_name}'
 copyright = '{author}'
 author = '{author}'
