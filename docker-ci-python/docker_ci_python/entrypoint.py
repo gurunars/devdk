@@ -15,7 +15,7 @@ def _exists(*args):
 
 
 def _wrap(strings, fmt):
-    return list(map(lambda string: fmt.format(string), strings))
+    return list(map(fmt.format, strings))
 
 
 def _rm(*args):
