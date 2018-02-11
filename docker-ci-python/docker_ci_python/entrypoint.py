@@ -106,7 +106,11 @@ class PackageUtils(object):
             config = fil.read()
 
         def _meta(title):
-            self._run(["python", os.path.join(self._config_path, "setup.py"), "--{}".format(title)])
+            return self._run([
+                "python",
+                os.path.join(self._config_path, "setup.py"),
+                "--{}".format(title)
+            ])
 
         with open(os.path.join(self._project_path, DOCS, "conf.py"), "w") as fil:
             fil.write(config.format(
