@@ -13,7 +13,10 @@ RUN apk update && \
 ADD /requirements.txt /build/
 RUN pip install -r /build/requirements.txt
 ADD / /build/
-RUN pip install -U /build 1> /dev/null
+RUN cp /build/configs/setup.py /build/ && \
+    sed -i 's/project/build/g' /build/setup.py && \
+    pip install -U /build 1> /dev/null && \
+    rm /build/setup.py
 
 WORKDIR /project
 
