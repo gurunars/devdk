@@ -8,3 +8,4 @@ yapf==0.20.1
 sphinx_rtd_theme==0.2.5b2
 sphinx==1.7.0b1
 sphinxcontrib-plantuml==0.10
+PyYAML==3.12

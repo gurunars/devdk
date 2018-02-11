@@ -3,12 +3,18 @@ import sys
 
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
+from yaml import load
 
 
 assert sys.version_info.major == 3, "Only Python 3 is supported"
 
 
 PROJECT_PATH = "/project"
+
+
+def _setup_yml():
+    with open(_pt("setup.yml")) as setup_yml:
+        return load(setup_yml.read())
 
 
 def _pt(name):
@@ -42,5 +48,6 @@ setup(
     install_requires=_get_requirements(),
     version=_get_version(),
     packages=find_packages(exclude=["tests", "integration_tests"]),
-    include_package_data=True
+    include_package_data=True,
+    **_setup_yml()
 )
