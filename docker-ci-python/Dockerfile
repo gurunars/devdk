@@ -13,12 +13,15 @@ RUN apk update && \
 ADD /requirements.txt /build/
 RUN pip install -r /build/requirements.txt
 ADD / /build/
-RUN cp /build/configs/setup.py /build/ && \
-    sed -i 's/project/build/g' /build/setup.py && \
-    pip install -U /build 1> /dev/null && \
-    rm /build/setup.py
+ADD / /project/
 
 WORKDIR /project
+
+RUN cp /build/configs/setup.py /project/ && \
+    pip install -U . 1> /dev/null
+
+RUN entry-point static-checks && \
+    entry-point tests
 
 ENTRYPOINT ["entry-point"]
 
