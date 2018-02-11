@@ -43,7 +43,7 @@ def _run_for_project(project_path, command):
     gid = stat_info.st_gid
 
     if uid == 0:  # mounted on behalf of root user (Mac)
-        return run_command(command)
+        return run_command(command, capture=True)
     else:  # mounted on behalf of host user (Linux)
         _run_with_safe_error(
             ["addgroup", "-g", str(gid), "tester"],
@@ -54,7 +54,10 @@ def _run_for_project(project_path, command):
             "adduser: user 'tester' in use"
         )
         try:
-            return run_command(["sudo", "-E", "-S", "-u", "tester"] + command)
+            return run_command(
+                ["sudo", "-E", "-S", "-u", "tester"] + command,
+                capture=True
+            )
         except CommandException as error:
             raise CommandException(error.returncode, command, error.output)
 
@@ -79,7 +82,8 @@ class PackageUtils(object):
         if not _exists(self._project_path, module_name):
             return
         self._run([
-            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(self._config_path),
+            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(
+                self._config_path),
             module_name
         ])
 
@@ -91,7 +95,8 @@ class PackageUtils(object):
         run(["pyflakes", module_name])
         run([
             "custom-pylint", "--persistent=n",
-            "--rcfile={}".format(os.path.join(self._config_path, pylintrc_file)), module_name
+            "--rcfile={}".format(os.path.join(self._config_path,
+                                              pylintrc_file)), module_name
         ])
 
     def get_testable_packages(self):
@@ -112,7 +117,9 @@ class PackageUtils(object):
                 "--{}".format(title)
             ])
 
-        with open(os.path.join(self._project_path, DOCS, "conf.py"), "w") as fil:
+        with open(
+            os.path.join(self._project_path, DOCS, "conf.py"), "w"
+        ) as fil:
             fil.write(config.format(
                 project_name=_meta("name"),
                 version=_meta("version"),
@@ -230,7 +237,8 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        self._run(["python", os.path.join(self._config_path, "setup.py"), "bdist_wheel"])
+        self._run(["python", os.path.join(
+            self._config_path, "setup.py"), "bdist_wheel"])
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""

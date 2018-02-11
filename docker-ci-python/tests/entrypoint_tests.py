@@ -96,11 +96,16 @@ class PackageUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call("/project/gen-docs/conf.py", "w")
         ], _open.call_args_list)
         self.assertEqual([
-            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--name"]),
-            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--version"]),
-            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--author"])
+            mock.call(
+                "/project", ["python", "/etc/docker-python/setup.py",
+                             "--name"]),
+            mock.call(
+                "/project", ["python", "/etc/docker-python/setup.py",
+                             "--version"]),
+            mock.call(
+                "/project", ["python", "/etc/docker-python/setup.py",
+                             "--author"])
         ], self.run.call_args_list)
-
 
 
 class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
@@ -121,7 +126,8 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_root_user(self):
         self.stat.st_uid = 0
         _run_for_project("/normal-path", ["cmd"])
-        self.assertEqual([mock.call(["cmd"])], self.run.call_args_list)
+        self.assertEqual([mock.call(["cmd"], capture=True)],
+                         self.run.call_args_list)
 
     def test_rethrow_without_sudo_part(self):
         self.run.side_effect = [None, None, CommandException(42, ["cmd"])]
@@ -138,7 +144,8 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call(["adduser", "-D", "-u", "42", "-G", "tester", "tester"],
                       silent=True,
                       capture=True),
-            mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"])
+            mock.call(["sudo", "-E", "-S", "-u", "tester", "cmd"],
+                      capture=True)
         ], self.run.call_args_list)
 
 
@@ -253,7 +260,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_build(self):
         self.ep.build()
         self.run.assert_called_once_with(
-            "/project", ["python", "/etc/docker-python/setup.py", "bdist_wheel"]
+            "/project", ["python",
+                         "/etc/docker-python/setup.py", "bdist_wheel"]
         )
 
     def test_build_docs(self):

@@ -2,6 +2,8 @@ INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 RUN=docker run --rm -v $(PWD):/project
 IMG=docker-ci-python
 
+all: clean static-checks tests build
+
 image:
 	@docker build . -t $(IMG)
 
@@ -15,8 +17,6 @@ endif
 clean:
 	-@$(RUN) $(IMG) clean > /dev/null 2>&1 | true
 	-@docker rmi -f $(IMG) > /dev/null 2>&1 | true
-
-all: clean static-checks tests build
 
 .PHONY: help build static-checks connect tests image clean repl reformat all
 .DEFAULT_GOAL: help
