@@ -96,9 +96,9 @@ class PackageUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             mock.call("/project/gen-docs/conf.py", "w")
         ], _open.call_args_list)
         self.assertEqual([
-            mock.call("/project", ["python", "setup.py", "--name"]),
-            mock.call("/project", ["python", "setup.py", "--version"]),
-            mock.call("/project", ["python", "setup.py", "--author"])
+            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--name"]),
+            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--version"]),
+            mock.call("/project", ["python", "/etc/docker-python/setup.py", "--author"])
         ], self.run.call_args_list)
 
 
@@ -253,7 +253,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_build(self):
         self.ep.build()
         self.run.assert_called_once_with(
-            "/project", ["python", "setup.py", "bdist_wheel"]
+            "/project", ["python", "/etc/docker-python/setup.py", "bdist_wheel"]
         )
 
     def test_build_docs(self):
