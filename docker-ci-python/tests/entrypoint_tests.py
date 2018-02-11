@@ -164,6 +164,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.reformat = utils.reformat_pkg
         self.copy_config = utils.copy_config
 
+        self.listdir = self.patch("os.listdir")
         self.exists_at = self.patch("_exists")
         self.print_f = self.patch("print")
         self.shutil = self.patch("shutil")
@@ -231,9 +232,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         )
 
     def test_clean(self):
-        self.get_packages.return_value = ["one", "two"]
+        self.listdir.return_value = ["one.egg-info", "two.egg-info", "three"]
         self.ep.clean()
-        print(self.rm.call_args_list)
         self.assertEqual(
             list(
                 map(

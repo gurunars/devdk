@@ -230,9 +230,17 @@ class EntryPoint(object):
             ] + _wrap(self._modules, "--cover-package={}")
         )
 
+    def _eggs(self):
+        return list(
+            filter(
+                lambda fil: fil.endswith(".egg-info"),
+                os.listdir(".")
+            )
+        )
+
     def clean(self):
         """Removes all the artifacts produced by the toolchain"""
-        for artifact in self.ARTIFACTS + _wrap(self._modules, "{}.egg-info"):
+        for artifact in self.ARTIFACTS + self._eggs():
             _rm(self._project_path, artifact)
 
     def reformat(self):
