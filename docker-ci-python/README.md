@@ -8,3 +8,6 @@ A docker image that includes:
 - yapf for code reformatting
 - ipython for playing around with the library
 - sphinx to generate API docs (has plantuml support)
+
+Use it in conjunction with
+[python-library-template](https://github.com/nephilim-solutions/python-library-template)
