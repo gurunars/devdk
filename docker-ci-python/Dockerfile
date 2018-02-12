@@ -11,8 +11,12 @@ RUN apk update && \
     wget http://vorboss.dl.sourceforge.net/project/plantuml/plantuml.jar && \
     apk del wget
 
-ADD /requirements.txt /build/
-RUN pip install -r /build/requirements.txt
+ADD /docker/list_all_requirements.py /build/
+ADD /setup.yml /build/
+
+RUN pip install PyYAML==3.12 && \
+    pip install $(python /build/list_all_requirements.py /build/setup.yml)
+
 ADD / /build/
 ADD / /project/
 
@@ -26,6 +30,5 @@ RUN entry-point static-checks && \
 
 ENTRYPOINT ["entry-point"]
 
-ONBUILD COPY setup.* /requirements*.txt /project/
-ONBUILD RUN sh /build/docker/install-if-exists.sh requirements-dev.txt
-ONBUILD RUN sh /build/docker/install-if-exists.sh requirements.txt
+ONBUILD COPY setup.yml /project/
+ONBUILD RUN pip install $(python /build/list_all_requirements.py /build/setup.yml)
