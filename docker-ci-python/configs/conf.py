@@ -12,7 +12,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
-    'sphinxcontrib.plantuml'
+    'sphinxcontrib.plantuml',
+    'sphinx.ext.githubpages'
 ]
 
 plantuml = 'java -jar /usr/share/plantuml.jar'
