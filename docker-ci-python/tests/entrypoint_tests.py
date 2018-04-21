@@ -219,17 +219,17 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.get_packages.return_value = ["one", "two"]
         self.ep("tests")
         cmd = [
-            'nosetests', '-v', '--with-xunit', '-e', 'integration_tests',
-            '--cover-erase', '--with-coverage', '--with-doctest',
-            '--cover-min-percentage=100', '--cover-inclusive', '--cover-html',
-            '--cover-html-dir=/project/coverage', '--cover-xml',
-            '--cover-xml-file=/project/coverage.xml', '--cover-package=one',
-            '--cover-package=two'
+            "pytest",
+            "--cov-report=term:skip-covered",
+            "--cov-report=html:coverage",
+            "--cov-report=xml:coverage.xml",
+            "--doctest-modules",
+            "--cov-fail-under=100",
+            "--junit-xml=nosetests.xml",
+            "--cov=one",
+            "--cov=two"
         ]
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
-        self.shutil.copy.assert_called_once_with(
-            "/etc/docker-python/coveragerc", "/project/.coveragerc"
-        )
 
     def test_clean(self):
         self.listdir.return_value = ["one.egg-info", "two.egg-info", "three"]

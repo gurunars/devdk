@@ -22,6 +22,7 @@ RUN pip install PyYAML==3.12 && \
 ADD / /project/
 
 RUN cp /build/configs/setup.py /project/ && \
+    cp /build/configs/pytest.ini / && \
     pip install -U . 1> /dev/null
 
 RUN entry-point static-checks && \

@@ -142,7 +142,7 @@ class EntryPoint(object):
     # pylint: disable=no-self-use
 
     ARTIFACTS = [
-        "coverage", ".coverage", ".coveragerc", "coverage.xml",
+        "coverage", ".coverage", "coverage.xml", "pytest.ini"
         "nosetests.xml", DOCS, "dist", "build"
     ]
 
@@ -167,7 +167,10 @@ class EntryPoint(object):
                 )
 
     def _run(self, args):
-        return _run_for_project(self._project_path, args)
+        return _run_for_project(
+            self._project_path,
+            list(filter(lambda it: it, args))
+        )
 
     @property
     def _modules(self):
@@ -207,28 +210,15 @@ class EntryPoint(object):
     def tests(self):
         """Runs unit tests with code coverage"""
         # There is no way to make coverage module show missed lines otherwise
-        shutil.copy(
-            "{}/coveragerc".format(self._config_path),
-            "{}/.coveragerc".format(self._project_path)
-        )
-        self._run(
-            [
-                "nosetests",
-                "-v",
-                "--with-xunit",
-                "-e",
-                "integration_tests",
-                "--cover-erase",  # To get proper stats
-                "--with-coverage",
-                "--with-doctest",
-                "--cover-min-percentage=100",
-                "--cover-inclusive",
-                "--cover-html",
-                "--cover-html-dir={}/coverage".format(self._project_path),
-                "--cover-xml",
-                "--cover-xml-file={}/coverage.xml".format(self._project_path)
-            ] + _wrap(self._modules, "--cover-package={}")
-        )
+        self._run([
+            "pytest",
+            "--cov-report=term:skip-covered",
+            "--cov-report=html:coverage",
+            "--cov-report=xml:coverage.xml",
+            "--doctest-modules",
+            "--cov-fail-under=100",
+            "--junit-xml=nosetests.xml"
+        ] + _wrap(self._modules, "--cov={}"))
 
     def _eggs(self):
         return list(
