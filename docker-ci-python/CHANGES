@@ -1,3 +1,7 @@
+1.2.0
+
+    Use install.sh to install pip dependencies
+
 1.1.0
 
     Use pytest instead of nose
