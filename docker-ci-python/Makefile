@@ -1,6 +1,6 @@
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 RUN=docker run --rm -v $(PWD):/project
-IMG=docker-ci-python
+IMG=nephilimsolutions/docker-ci-python
 
 all: clean static-checks tests
 

@@ -31,4 +31,4 @@ RUN entry-point static-checks && \
 ENTRYPOINT ["entry-point"]
 
 ONBUILD COPY setup.yml /project/
-ONBUILD RUN pip install -q $(python /build/configs/setup.py list-requirements)
+ONBUILD RUN /bin/sh /build/configs/install.sh
