@@ -212,7 +212,7 @@ class EntryPoint(object):
         # There is no way to make coverage module show missed lines otherwise
         self._run([
             "pytest",
-            "--cov-report=term:skip-covered",
+            "--cov-report=term-missing:skip-covered",
             "--cov-report=html:coverage",
             "--cov-report=xml:coverage.xml",
             "--doctest-modules",

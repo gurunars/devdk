@@ -220,7 +220,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self.ep("tests")
         cmd = [
             "pytest",
-            "--cov-report=term:skip-covered",
+            "--cov-report=term-missing:skip-covered",
             "--cov-report=html:coverage",
             "--cov-report=xml:coverage.xml",
             "--doctest-modules",
