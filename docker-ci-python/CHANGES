@@ -1,3 +1,7 @@
+1.3.0
+
+    Store results in test-results.xml
+
 1.2.0
 
     Use install.sh to install pip dependencies
