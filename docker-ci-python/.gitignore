@@ -9,4 +9,4 @@ gen-docs
 .coveragerc
 coverage.xml
 coverage/
-nosetests.xml
+test-results.xml

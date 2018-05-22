@@ -225,7 +225,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             "--cov-report=xml:coverage.xml",
             "--doctest-modules",
             "--cov-fail-under=100",
-            "--junit-xml=nosetests.xml",
+            "--junit-xml=test-results.xml",
             "--cov=one",
             "--cov=two"
         ]

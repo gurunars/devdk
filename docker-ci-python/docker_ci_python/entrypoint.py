@@ -143,7 +143,7 @@ class EntryPoint(object):
 
     ARTIFACTS = [
         "coverage", ".coverage", "coverage.xml", "pytest.ini"
-        "nosetests.xml", DOCS, "dist", "build"
+        "test-results.xml", DOCS, "dist", "build"
     ]
 
     def __init__(self, project_path, config_path):
@@ -217,7 +217,7 @@ class EntryPoint(object):
             "--cov-report=xml:coverage.xml",
             "--doctest-modules",
             "--cov-fail-under=100",
-            "--junit-xml=nosetests.xml"
+            "--junit-xml=test-results.xml"
         ] + _wrap(self._modules, "--cov={}"))
 
     def _eggs(self):
