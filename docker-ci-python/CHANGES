@@ -1,3 +1,7 @@
+1.4.0
+
+    Added mypy to static checks
+
 1.3.0
 
     Store results in test-results.xml

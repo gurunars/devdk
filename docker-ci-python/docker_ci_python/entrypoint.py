@@ -92,6 +92,7 @@ class ModuleUtils(object):
         if not _exists(self._project_path, module_name):
             return
         run = self._run
+        run(["mypy", "--ignore-missing-imports", module_name])
         run(["pycodestyle", "--max-line-length=79", module_name])
         run(["pyflakes", module_name])
         run([

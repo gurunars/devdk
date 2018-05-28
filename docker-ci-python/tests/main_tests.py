@@ -4,7 +4,7 @@ from docker_ci_python.run_command import CommandException
 from .base_test import BaseTest
 
 
-class MainTest(BaseTest.with_module("docker_ci_python.main")):
+class MainTest(BaseTest.with_module("docker_ci_python.main")):  # type: ignore
 
     def setUp(self):
         self.exit = self.patch("sys.exit")

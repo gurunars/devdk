@@ -8,7 +8,10 @@ from docker_ci_python.entrypoint import EntryPoint, ModuleUtils, \
 from .base_test import BaseTest
 
 
-class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+BASE = BaseTest.with_module("docker_ci_python.entrypoint")
+
+
+class UtilsTest(BASE):  # type: ignore
 
     def test_rm(self):
         self.patch("os.path.exists", lambda path: path == "/project/exists")
@@ -35,7 +38,7 @@ class UtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             _run_with_safe_error(["cmd"], "SAFE")
 
 
-class ModuleUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+class ModuleUtilsTest(BASE):  # type: ignore
 
     def setUp(self):
         self.run = self.patch("_run_for_project")
@@ -48,6 +51,9 @@ class ModuleUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         self._ex(True)
         self.utils.static_check("one", "pylintrc")
         self.assertEqual([
+            mock.call(
+                '/project', ['mypy', '--ignore-missing-imports', 'one']
+            ),
             mock.call(
                 '/project', ['pycodestyle', '--max-line-length=79', 'one']
             ),
@@ -111,7 +117,7 @@ class ModuleUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         ], self.run.call_args_list)
 
 
-class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+class RunForProjectTest(BASE):  # type: ignore
 
     def setUp(self):
         self.exists = self.patch("os.path.exists")
@@ -152,7 +158,7 @@ class RunForProjectTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         ], self.run.call_args_list)
 
 
-class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
+class EntryPointTest(BASE):  # type: ignore
 
     # This is intentional to have a bunch of patches
     # pylint: disable=too-many-instance-attributes

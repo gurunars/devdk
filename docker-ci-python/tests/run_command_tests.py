@@ -13,7 +13,7 @@ def _run():
 BASE = BaseTest.with_module("docker_ci_python.run_command")
 
 
-class RunYieldableCommandTest(BASE):
+class RunYieldableCommandTest(BASE):  # type: ignore
 
     def setUp(self):
         self.process = self.patch("subprocess.Popen").return_value
@@ -32,7 +32,7 @@ def _to_calls(array):
     return [mock.call(item, end="") for item in array]
 
 
-class RunWithAccumulationCommandTest(BASE):
+class RunWithAccumulationCommandTest(BASE):  # type: ignore
 
     def setUp(self):
         self.run_yieldable_command = self.patch(
@@ -79,7 +79,7 @@ class RunWithAccumulationCommandTest(BASE):
         self._assert_prints(["one", "two", "three"])
 
 
-class RunCommandTest(BaseTest.with_module("docker_ci_python.run_command")):
+class RunCommandTest(BASE):  # type: ignore
 
     def test_ok(self):
 

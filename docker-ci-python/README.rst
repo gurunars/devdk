@@ -4,7 +4,7 @@ docker-ci-python
 A docker image that includes:
 
 - python3.6 setup
-- pep8, pyflakes, pylint checkers
+- mypy, pep8, pyflakes, pylint checkers
 - unit test coverage modules
 - yapf for code reformatting
 - ipython for playing around with the library

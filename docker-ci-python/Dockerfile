@@ -4,7 +4,8 @@ ENV JAVA_HOME=/usr/lib/jvm/default-jvm
 ENV LANG en_US.UTF-8
 
 RUN apk update && \
-    apk add --no-cache coreutils sudo graphviz ttf-droid ttf-droid-nonlatin openjdk7-jre-base python3-dev && \
+    apk add --no-cache coreutils sudo graphviz ttf-droid ttf-droid-nonlatin \
+    openjdk7-jre-base python3-dev gcc musl-dev linux-headers && \
     pip install -U pip setuptools && \
     ln -sf "${JAVA_HOME}/bin/"* "/usr/bin/" && \
     cd /usr/share && \
