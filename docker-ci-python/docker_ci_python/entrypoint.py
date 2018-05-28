@@ -50,14 +50,13 @@ def _run_for_project(project_path, command):
             "addgroup: group 'tester' in use"
         )
         _run_with_safe_error(
-            ["adduser", "-D", "-u", str(uid), "-G", "tester", "tester"],
+            ["adduser", "-D", "-u",
+             str(uid), "-G", "tester", "tester"],
             "adduser: user 'tester' in use"
         )
         try:
-            return run_command(
-                ["sudo", "-E", "-S", "-u", "tester"] + command,
-                capture=True
-            )
+            return run_command(["sudo", "-E", "-S", "-u", "tester"] + command,
+                               capture=True)
         except CommandException as error:
             raise CommandException(error.returncode, command, error.output)
 
@@ -84,9 +83,8 @@ class ModuleUtils(object):
         if not _exists(self._project_path, module_name):
             return
         self._run([
-            "yapf", "-i", "-r", "-p", "--style", "{}/yapf".format(
-                self._config_path),
-            module_name
+            "yapf", "-i", "-r", "-p", "--style",
+            "{}/yapf".format(self._config_path), module_name
         ])
 
     # pylint: disable=missing-docstring
@@ -97,9 +95,12 @@ class ModuleUtils(object):
         run(["pycodestyle", "--max-line-length=79", module_name])
         run(["pyflakes", module_name])
         run([
-            "custom-pylint", "--persistent=n",
-            "--rcfile={}".format(os.path.join(self._config_path,
-                                              pylintrc_file)), module_name
+            "custom-pylint",
+            "--persistent=n",
+            "--rcfile={}".format(
+                os.path.join(self._config_path, pylintrc_file)
+            ),
+            module_name,
         ])
 
     # pylint: disable=missing-docstring
@@ -122,14 +123,15 @@ class ModuleUtils(object):
                 "--{}".format(title)
             ])
 
-        with open(
-            os.path.join(self._project_path, DOCS, "conf.py"), "w"
-        ) as fil:
-            fil.write(config.format(
-                project_name=_meta("name"),
-                version=_meta("version"),
-                author=_meta("author")
-            ))
+        with open(os.path.join(self._project_path, DOCS, "conf.py"),
+                  "w") as fil:
+            fil.write(
+                config.format(
+                    project_name=_meta("name"),
+                    version=_meta("version"),
+                    author=_meta("author")
+                )
+            )
 
 
 class EntryPoint(object):
@@ -168,8 +170,7 @@ class EntryPoint(object):
 
     def _run(self, args):
         return _run_for_project(
-            self._project_path,
-            list(filter(lambda it: it, args))
+            self._project_path, list(filter(lambda it: it, args))
         )
 
     @property
@@ -196,14 +197,11 @@ class EntryPoint(object):
 
     def static_checks(self):
         """Runs pycodestyle, pylint and pyflakes"""
-        pkg_configs = list(
-            map(
-                lambda pkg: (pkg, "pylintrc"),
-                self._modules
-            )
-        )
-        test_configs = [("tests", "pylintrc-test"),
-                        ("integration_tests", "pylintrc-test")]
+        pkg_configs = list(map(lambda pkg: (pkg, "pylintrc"), self._modules))
+        test_configs = [
+            ("tests", "pylintrc-test"),
+            ("integration_tests", "pylintrc-test"),
+        ]
         for pkg_name, pylint_rc in pkg_configs + test_configs:
             self._package_utils.static_check(pkg_name, pylint_rc)
 
@@ -217,15 +215,12 @@ class EntryPoint(object):
             "--cov-report=xml:coverage.xml",
             "--doctest-modules",
             "--cov-fail-under=100",
-            "--junit-xml=test-results.xml"
+            "--junit-xml=test-results.xml",
         ] + _wrap(self._modules, "--cov={}"))
 
     def _eggs(self):
         return list(
-            filter(
-                lambda fil: fil.endswith(".egg-info"),
-                os.listdir(".")
-            )
+            filter(lambda fil: fil.endswith(".egg-info"), os.listdir("."))
         )
 
     def clean(self):
@@ -240,8 +235,11 @@ class EntryPoint(object):
 
     def build(self):
         """Produces a library package in the form of wheel package"""
-        self._run(["python", os.path.join(
-            self._config_path, "setup.py"), "bdist_wheel"])
+        self._run([
+            "python",
+            os.path.join(self._config_path, "setup.py"),
+            "bdist_wheel",
+        ])
 
     def build_docs(self):
         """Produces api docs in the form of .rst and .html files"""
@@ -251,6 +249,4 @@ class EntryPoint(object):
                 module, "-o", DOCS
             ])
         self._package_utils.copy_config()
-        self._run([
-            "sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)
-        ])
+        self._run(["sphinx-build", "-b", "html", DOCS, "{}/html".format(DOCS)])

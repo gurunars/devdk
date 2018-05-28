@@ -97,14 +97,17 @@ class ModuleUtilsTest(BaseTest.with_module("docker_ci_python.entrypoint")):
         ], _open.call_args_list)
         self.assertEqual([
             mock.call(
-                "/project", ["python", "/etc/docker-python/setup.py",
-                             "--name"]),
+                "/project",
+                ["python", "/etc/docker-python/setup.py", "--name"],
+            ),
             mock.call(
-                "/project", ["python", "/etc/docker-python/setup.py",
-                             "--version"]),
+                "/project",
+                ["python", "/etc/docker-python/setup.py", "--version"],
+            ),
             mock.call(
-                "/project", ["python", "/etc/docker-python/setup.py",
-                             "--author"])
+                "/project",
+                ["python", "/etc/docker-python/setup.py", "--author"],
+            )
         ], self.run.call_args_list)
 
 
@@ -227,7 +230,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             "--cov-fail-under=100",
             "--junit-xml=test-results.xml",
             "--cov=one",
-            "--cov=two"
+            "--cov=two",
         ]
         self.assertEqual([mock.call('/project', cmd)], self.run.call_args_list)
 
@@ -251,7 +254,7 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
             list(
                 map(
                     mock.call,
-                    ["tests", "integration_tests", "one", "two"]
+                    ["tests", "integration_tests", "one", "two"],
                 )
             ),
             self.reformat.call_args_list,
@@ -260,8 +263,8 @@ class EntryPointTest(BaseTest.with_module("docker_ci_python.entrypoint")):
     def test_build(self):
         self.ep.build()
         self.run.assert_called_once_with(
-            "/project", ["python",
-                         "/etc/docker-python/setup.py", "bdist_wheel"]
+            "/project",
+            ["python", "/etc/docker-python/setup.py", "bdist_wheel"],
         )
 
     def test_build_docs(self):
