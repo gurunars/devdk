@@ -16,5 +16,5 @@ chown -R $UR:$UR $HM
 if [[ "$1" == ssh ]]; then
   /bin/sh
 else
-  su $UR -c "/usr/local/bin/jupyter-notebook --config=config.py"
+  su $UR -c "/usr/local/bin/jupyter-notebook --config=/config.py"
 fi

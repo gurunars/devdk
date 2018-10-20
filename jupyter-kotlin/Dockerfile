@@ -17,6 +17,7 @@ RUN apk add --no-cache git bash && \
     rm -rf kotlin-jupyter && \
     apk del git bash
 
+ADD /config.py /
 ADD /start.sh /
 
 WORKDIR /project
