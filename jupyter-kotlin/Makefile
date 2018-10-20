@@ -1,6 +1,6 @@
 INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
-RUN=docker run -it -u=$(UID):$(id -g $USER) --rm -v $(PWD):/project -p 8888:8888 $(IMG)
 IMG=nephilimsolutions/jupiter-kotlin
+RUN=docker run -it --rm -v $(PWD):/project -p 8888:8888 $(IMG)
 
 all: clean image
 
