@@ -1,5 +1,4 @@
-docker-ci-python
-================
+# docker-ci-python
 
 A docker image that includes:
 
@@ -11,4 +10,4 @@ A docker image that includes:
 - sphinx to generate API docs (has plantuml support)
 
 Use it in conjunction with
-`python-library-template <https://github.com/nephilim-solutions/python-library-template>`_
+[python-library-template](https://github.com/nephilim-solutions/python-library-template)
