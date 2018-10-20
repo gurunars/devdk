@@ -4,18 +4,18 @@ ENV JAVA_HOME=/usr/lib/jvm/default-jvm
 ENV LANG en_US.UTF-8
 
 RUN apk update && \
-    apk add --no-cache git python3-dev openjdk8 gcc musl-dev linux-headers zeromq-dev bash && \
+    apk add --no-cache python3-dev openjdk8 gcc musl-dev linux-headers zeromq-dev shadow && \
     pip install -U pip jupyter && \
+    mkdir /var/mail && \
+    mkdir project
+
+RUN apk add --no-cache git bash && \
     git clone https://github.com/ligee/kotlin-jupyter.git && \
     cd /kotlin-jupyter && \
-    ./gradlew install && \
+    ./gradlew install -PinstallPath=/home/jupyter/.ipython/kernels/kotlin && \
     cd / && \
     rm -rf kotlin-jupyter && \
     apk del git bash
-
-RUN apk add shadow && \
-    mkdir /var/mail && \
-    mkdir project
 
 ADD /start.sh /
 

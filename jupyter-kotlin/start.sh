@@ -5,17 +5,16 @@ set -e
 USER_UID=$(stat -c '%u' /project)
 USER_GID=$(stat -c '%g' /project)
 
-USER=jupyter
-HOME=/home/jupyter
+UR=jupyter
+HM=/home/jupyter
 
-mkdir $HOME
+groupadd --gid $USER_GID $UR
+useradd -d $HM -s /bin/sh -d $HM --uid $USER_UID --gid $USER_GID $UR
 
-groupadd --gid $USER_GID $USER
-useradd -d $HOME --uid $USER_UID --gid $USER_GID $USER
-chown $USER:$USER $HOME
+chown -R $UR:$UR $HM
 
 if [[ "$1" == ssh ]]; then
   /bin/sh
 else
-  su -s /bin/sh $USER -c "/usr/local/bin/jupyter-notebook --config=config.py"
+  su $UR -c "/usr/local/bin/jupyter-notebook --config=config.py"
 fi

@@ -7,7 +7,7 @@ all: clean image
 image:
 	@docker build . -t $(IMG)
 
-run:
+start:
 	@$(RUN)
 
 ssh:
@@ -16,5 +16,5 @@ ssh:
 clean:
 	-@docker rmi -f $(IMG) > /dev/null 2>&1 | true
 
-.PHONY: image all run clean ssh
+.PHONY: image all start clean ssh
 .DEFAULT_GOAL: run
